@@ -1,0 +1,9 @@
+# LLM Backend - Extra dependencies (core deps come from root requirements.txt)
+# Install AFTER: pip install -r ../../../requirements.txt
+
+# Web Search (for policy/academic fallback)
+duckduckgo-search>=4.0.0
+tavily-python>=0.5.0
+
+# Optional: browser-based search (heavy, needs: playwright install chromium)
+# playwright>=1.52.0

@@ -1,0 +1,77 @@
+.navbar {
+    position: relative;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 22px;
+    width: 100%;
+    max-width: 100%;
+    color: #f2f3f7;
+    background: rgba(10, 12, 18, 0.7);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.navbar h1 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #e0f2fe;
+    white-space: nowrap;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.nav-links a,
+.nav-links .dashboard-button,
+.nav-links .profile-button,
+.nav-links .logout-button {
+    color: #f2f3f7;
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.nav-links a:hover,
+.nav-links .dashboard-button:hover,
+.nav-links .profile-button:hover,
+.nav-links .logout-button:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+
+.nav-links .logout-button {
+    color: #fb7185;
+    background: rgba(251, 113, 133, 0.08);
+    border-color: rgba(251, 113, 133, 0.25);
+}
+.nav-links .logout-button:hover {
+    background: rgba(251, 113, 133, 0.18);
+    border-color: rgba(251, 113, 133, 0.4);
+}
+
+@media (max-width: 640px) {
+    .navbar { flex-direction: column; gap: 10px; padding: 12px 14px; }
+    .navbar h1 { font-size: 0.95rem; text-align: center; }
+    .nav-links { flex-wrap: wrap; justify-content: center; }
+}

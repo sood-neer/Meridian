@@ -1,0 +1,50 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+flask.log
+flask_server.log
+
+# Local runtime state
+.runtime/
+
+# Chroma vector DB (local data)
+chroma_data/
+
+# Environment variables (never commit real keys)
+.env
+.env.local
+.env.*.local
+
+# Markdown docs (keep locally, main README.md stays in repo)
+*.md
+!README.md
+
+# Uploaded transcripts / personal PDFs (never commit)
+IAAS/LLMAcadamic-Advisor/LLM/*.pdf
+
+# Generated graph cache (regenerated on demand from CSVs + code)
+IAAS/LLMAcadamic-Advisor/LLM/cache/
