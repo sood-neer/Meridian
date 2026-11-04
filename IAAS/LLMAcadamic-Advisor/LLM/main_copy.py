@@ -1,6 +1,17 @@
 import os
 import sys
 
+# Suppress Chroma telemetry overhead and matplotlib font cache rebuilding
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+os.environ.setdefault("CHROMA_TELEMETRY", "False")
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+
+try:
+    import chromadb.telemetry.product.posthog as _cb_telemetry
+    _cb_telemetry.capture = lambda *args, **kwargs: None
+except Exception:
+    pass
+
 from dotenv import load_dotenv
 
 # Load .env from IAAS/LLMAcadamic-Advisor or repo root
@@ -122,8 +133,11 @@ def get_default_model_name() -> str:
 PRIMARY_MODEL_NAME = get_default_model_name()
 CLASSIFIER_MODEL_NAME = os.getenv("ADVISOR_CLASSIFIER_MODEL_NAME", PRIMARY_MODEL_NAME)
 
-def create_chat_model(model_name: str = None, temperature: float = 0):
+def create_chat_model(model_name: str = None, temperature: float = 0, max_tokens: Optional[int] = None):
     """Instantiate ChatOpenAI targeting either OpenAI or Gemini OpenAI-compatible endpoint."""
+    kwargs: Dict[str, Any] = {"temperature": temperature}
+    if max_tokens:
+        kwargs["max_tokens"] = max_tokens
     if is_gemini_active():
         gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
         gemini_model = model_name or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
@@ -132,18 +146,18 @@ def create_chat_model(model_name: str = None, temperature: float = 0):
             base_url=base_url,
             api_key=gemini_key,
             model_name=gemini_model,
-            temperature=temperature,
             max_retries=2,
-            request_timeout=35
+            request_timeout=35,
+            **kwargs
         )
-    return ChatOpenAI(model_name=model_name or PRIMARY_MODEL_NAME, temperature=temperature)
+    return ChatOpenAI(model_name=model_name or PRIMARY_MODEL_NAME, **kwargs)
 
 def create_embeddings_model():
     """Instantiate embeddings model targeting either OpenAI or Gemini OpenAI-compatible endpoint."""
     if is_gemini_active():
         gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
         base_url = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
-        target_model = os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+        target_model = os.getenv("GEMINI_EMBEDDING_MODEL", "models/gemini-embedding-2")
         return OpenAIEmbeddings(
             base_url=base_url,
             api_key=gemini_key,
@@ -225,7 +239,7 @@ def is_policy_question(text: str) -> bool:
 
 def is_academic_or_policy_question(text: str) -> bool:
     """
-    Check if the question is about academics or Penn State policy.
+    Check if the question is about academics or NIT Hamirpur policy.
     Used to: (1) allow web search fallback, (2) reject non-academic questions with scope message.
     """
     if not text or len(text.strip()) < 5:
@@ -235,8 +249,8 @@ def is_academic_or_policy_question(text: str) -> bool:
         # Policy / institutional
         "advisor", "adviser", "advising", "drop", "add", "withdraw", "audit",
         "leave of absence", "declare major", "declare minor", "registration",
-        "bursar", "tuition", "gpa", "grade", "credit", "lionpath",
-        "penn state", "psu", "university policy", "academic policy",
+        "bursar", "tuition", "gpa", "cgpa", "sgpa", "backlog", "grade", "credit", "lionpath",
+        "nit hamirpur", "nith", "university policy", "academic policy",
         "academic requirement", "graduation", "degree", "enrollment",
         "course", "class", "major", "minor", "prerequisite",
         "semester", "transcript", "degree audit", "what-if",
@@ -308,7 +322,7 @@ def _is_time_sensitive_factual_question(text: str) -> bool:
     starters = re.search(r"^(who|what|when)\b", t) is not None
     freshness_terms = any(k in t for k in ["current", "currently", "latest", "now", "this semester", "this year", "upcoming"])
     institution_terms = any(k in t for k in [
-        "penn state", "psu", "abington", "chancellor", "chair", "dean", "director",
+        "nit hamirpur", "nith", "hamirpur", "chancellor", "chair", "dean", "director",
         "deadline", "calendar", "registration", "policy"
     ])
     return (starters and institution_terms) or (freshness_terms and institution_terms)
@@ -548,23 +562,21 @@ def _build_deadline_search_queries(
     user_question: str,
     conversation_history: Optional[List[dict]] = None
 ) -> List[str]:
-    """Build targeted PSU policy/deadline web queries."""
+    """Build targeted NIT Hamirpur policy/deadline web queries."""
     context_q = _contextualize_policy_question(user_question, conversation_history)
     term, year = _infer_term_year_from_context(user_question, conversation_history)
     year_txt = str(year) if year else ""
     term_txt = (term or "current").strip()
-    campus_txt = "Penn State Abington" if "abington" in context_q.lower() else "Penn State"
+    campus_txt = "NIT Hamirpur"
 
     query_variants = [
-        f"{campus_txt} {term_txt} {year_txt} academic calendar late drop",
-        f"{campus_txt} {term_txt} {year_txt} academic calendar drop add",
-        f"{campus_txt} {term_txt} {year_txt} early drop deadline",
-        f"{campus_txt} {term_txt} {year_txt} late drop deadline",
-        f"site:psu.edu {campus_txt} {term_txt} {year_txt} academic calendar",
-        f"site:pennstate.edu {campus_txt} {term_txt} {year_txt} late drop deadline",
-        f"site:psu.edu {campus_txt} {term_txt} {year_txt} drop add deadline",
+        f"site:nith.ac.in academic calendar {year_txt}",
+        f"site:nith.ac.in bachelor course structure syllabus",
+        f"site:nith.ac.in course registration end semester examination",
+        f"NIT Hamirpur academic calendar {term_txt} {year_txt}",
+        f"site:nith.ac.in ordinance regulations",
+        f"{campus_txt} registration schedule {year_txt}",
     ]
-
     deduped: List[str] = []
     seen = set()
     for query in query_variants:
@@ -583,13 +595,14 @@ def _lookup_exact_deadline_dates(
 ) -> Optional[str]:
     """Look up exact deadline dates through the shared research pipeline."""
     contextual_question = _contextualize_policy_question(user_question, conversation_history)
+    preferred_domains = ["nith.ac.in"]
     result = _run_shared_search_pipeline(
         user_id=user_id,
         question_text=contextual_question,
         conversation_history=conversation_history,
         trace=trace,
         preferred_strategy="deadline_exact_date",
-        preferred_domains=["abington.psu.edu", "psu.edu", "pennstate.edu"],
+        preferred_domains=preferred_domains,
         required_domain_mode="strict",
     )
     answer_text = _research_answer_text(result)
@@ -603,31 +616,19 @@ def _lookup_exact_deadline_dates(
 def _build_identity_search_queries(user_question: str) -> List[str]:
     q = (user_question or "").lower()
     keyword_q = _keywordize_query(user_question)
-    scope_abington = "abington" in q
-    base = []
-    if scope_abington:
-        base.extend([
-            f"site:abington.psu.edu {keyword_q}",
-            f"Penn State Abington {keyword_q}",
-        ])
-    base.extend([
-        f"site:psu.edu {keyword_q}",
-        f"Penn State {keyword_q}",
-    ])
-    if "abington" in q:
-        base.insert(0, f"Penn State Abington {keyword_q}")
-    if "chancellor" in q:
-        if scope_abington:
-            base.insert(0, "site:abington.psu.edu chancellor")
-        else:
-            base.insert(0, "site:psu.edu leadership")
-            base.insert(1, "Penn State leadership")
-    if "program chair" in q or "chair" in q:
-        base.insert(0, "site:abington.psu.edu computer science program chair")
-        base.insert(1, "site:abington.psu.edu computer science faculty")
-    if "provost" in q:
-        base.insert(0, "site:psu.edu provost")
-        base.insert(1, "Penn State provost")
+    base = [
+        f"site:nith.ac.in {keyword_q}",
+        f"NIT Hamirpur {keyword_q}",
+    ]
+    if "director" in q:
+        base.insert(0, "site:nith.ac.in director")
+        base.insert(1, "NIT Hamirpur Director")
+    if "dean" in q or "academic" in q:
+        base.insert(0, "site:nith.ac.in dean academic")
+    if "hod" in q or "head" in q or "chair" in q:
+        base.insert(0, "site:nith.ac.in computer science hod faculty")
+    if "registrar" in q:
+        base.insert(0, "site:nith.ac.in registrar")
     # Deduplicate while preserving order
     seen = set()
     out = []
@@ -641,11 +642,11 @@ def _build_identity_search_queries(user_question: str) -> List[str]:
 def _extract_domain_hints(question: str) -> List[str]:
     q = (question or "").lower()
     hints: List[str] = []
-    if any(k in q for k in ["penn state", "psu"]):
-        hints.extend(["psu.edu", "pennstate.edu"])
-    # Default to PSU domains for in-scope academic advising questions in this app.
+    if any(k in q for k in ["nit hamirpur", "nith", "hamirpur"]):
+        hints.extend(["nith.ac.in"])
+    # Default to NITH domain for in-scope academic advising questions in this app.
     if not hints and is_academic_or_policy_question(question):
-        hints.extend(["psu.edu", "pennstate.edu"])
+        hints.extend(["nith.ac.in"])
     return hints
 
 
@@ -687,8 +688,8 @@ def _expand_academic_query_terms(question: str) -> str:
     q = _normalize_question_for_search(question)
     q = re.sub(r"\bcs\b", "computer science", q, flags=re.IGNORECASE)
     q = re.sub(r"\bclasses\b", "courses", q, flags=re.IGNORECASE)
-    if is_academic_or_policy_question(q) and "penn state" not in q and "psu" not in q:
-        q = f"penn state {q}"
+    if is_academic_or_policy_question(q) and "nit hamirpur" not in q and "nith" not in q:
+        q = f"NIT Hamirpur {q}"
     return " ".join(q.split()).strip()
 
 
@@ -712,11 +713,10 @@ def _build_general_search_queries(user_question: str) -> List[str]:
         f"{q} official source",
         f"{q} latest update",
     ]
-    if "penn state" in lower_q or "psu" in lower_q or "abington" in lower_q:
+    if any(k in lower_q for k in ["nit hamirpur", "nith", "hamirpur"]):
         variants.extend([
-            f"Penn State {q}",
-            f"site:psu.edu {q}",
-            f"site:pennstate.edu {q}",
+            f"NIT Hamirpur {q}",
+            f"site:nith.ac.in {q}",
         ])
 
     out: List[str] = []
@@ -909,28 +909,22 @@ def _fetch_official_role_holder(
     """
     q = _normalize_question_for_search(question)
     role_keywords = _extract_role_keywords(q)
-    scope_abington = "abington" in q
-    candidate_urls = []
-    if scope_abington:
-        candidate_urls.extend([
-            "https://www.abington.psu.edu/",
-            "https://www.abington.psu.edu/about",
-            "https://www.abington.psu.edu/about/administration",
-            "https://www.abington.psu.edu/faculty-and-staff",
-        ])
-    else:
-        candidate_urls.extend([
-            "https://www.psu.edu/",
-            "https://www.psu.edu/about/leadership/",
-            "https://www.psu.edu/about/administration/",
-        ])
-    if "provost" in q:
-        candidate_urls.insert(0, "https://www.psu.edu/about/administration/")
-    if "chancellor" in q:
-        if scope_abington:
-            candidate_urls.insert(0, "https://www.abington.psu.edu/about/leadership")
-        else:
-            candidate_urls.insert(0, "https://www.psu.edu/about/leadership/")
+    candidate_urls = [
+        "https://nith.ac.in/",
+        "https://nith.ac.in/bachelor-course-structure-syllabus",
+        "https://nith.ac.in/academic-calendar",
+        "https://nith.ac.in/administration",
+        "https://nith.ac.in/deans",
+        "https://nith.ac.in/directors-desk",
+        "https://nith.ac.in/ordinance-regulations",
+        "https://nith.ac.in/computer-science-engineering",
+    ]
+    if "director" in q:
+        candidate_urls.insert(0, "https://nith.ac.in/directors-desk")
+    if "dean" in q:
+        candidate_urls.insert(0, "https://nith.ac.in/deans")
+    if "syllabus" in q or "bachelor" in q or "course" in q:
+        candidate_urls.insert(0, "https://nith.ac.in/bachelor-course-structure-syllabus")
 
     for url in candidate_urls:
         if domain_hints and not _is_domain_allowed(url, domain_hints):
@@ -954,8 +948,6 @@ def _fetch_official_role_holder(
             for page_url, html in pages_to_scan:
                 text = _strip_html_to_text(html)
                 low = text.lower()
-                if scope_abington and "abington" not in low:
-                    continue
                 if not any(k in low for k in role_keywords):
                     continue
                 # Role-aware extraction first (higher precision), then fallback.
@@ -1006,10 +998,8 @@ def _rank_identity_result(result: dict, role_keywords: List[str]) -> int:
     href = str(result.get("href", "") or "").lower()
     text = f"{title}\n{body}".lower()
     score = 0
-    if "abington.psu.edu" in href:
+    if "nith.ac.in" in href:
         score += 6
-    elif "psu.edu" in href or "pennstate.edu" in href:
-        score += 4
     if any(k in text for k in role_keywords):
         score += 4
     if "directory" in href or "faculty" in href or "leadership" in href or "administration" in href:
@@ -1045,8 +1035,8 @@ def _rank_deadline_date_candidates(
                 continue
 
             score = 0
-            if "psu.edu" in href or "pennstate.edu" in href:
-                score += 3
+            if "nith.ac.in" in href:
+                score += 5
             if has_deadline_terms:
                 score += 2
             if "late drop" in snippet_lower:
@@ -1088,7 +1078,7 @@ def _web_search_and_synthesize(
         preferred_domains = None
         if date_only:
             strategy = "deadline_exact_date"
-            preferred_domains = ["abington.psu.edu", "psu.edu", "pennstate.edu"]
+            preferred_domains = ["nith.ac.in"]
             required_domain_mode = "strict"
         elif force_fresh_identity:
             strategy = "identity_current_role"
@@ -1298,6 +1288,10 @@ def _research_answer_text(result: Optional[ResolvedResearchAnswer]) -> Optional[
     if result is None:
         return None
     answer = str(result.answer_text or "").strip()
+    if getattr(result, "exhausted", False) and not getattr(result, "citations", None):
+        return None
+    if "couldn't verify the answer with enough confidence" in answer:
+        return None
     return answer or None
 
 def track_collection_creation(collection_name: str, user_id: str):
@@ -1638,15 +1632,19 @@ def setup_environment(whatIfUpload=None, user_id='default'):
         has_transcript = False
         print("ℹ️ No transcript provided. Running in no-transcript mode.")
 
-    # ---- Load course-level data (processed_psu_courses.csv) for individual course queries ----
-    courses_csv_path = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
+    # ---- Load course-level data (nith_courses.csv / processed_psu_courses.csv) for individual course queries ----
+    courses_csv_path = os.path.join(os.path.dirname(__file__), "nith_courses.csv")
     if not os.path.exists(courses_csv_path):
-        alt_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "processed_psu_courses.csv")
+        alt_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_courses.csv")
         if os.path.exists(alt_path):
             courses_csv_path = alt_path
         else:
-            print("⚠️ processed_psu_courses.csv not found")
-            courses_csv_path = None
+            courses_csv_path = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
+            if not os.path.exists(courses_csv_path):
+                alt_path2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "processed_psu_courses.csv")
+                courses_csv_path = alt_path2 if os.path.exists(alt_path2) else None
+                if not courses_csv_path:
+                    print("⚠️ nith_courses.csv / processed_psu_courses.csv not found")
     
     if courses_csv_path and os.path.exists(courses_csv_path):
         df_courses = pd.read_csv(courses_csv_path)
@@ -1744,14 +1742,18 @@ def setup_environment(whatIfUpload=None, user_id='default'):
         print("⚠️ Course-level retriever not available (processed_psu_courses.csv missing)")
 
     # ---- Load majors CSV & build Chroma vectorstore for major requirements queries ----
-    majors_csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+    majors_csv_path = os.path.join(os.path.dirname(__file__), "nith_majors.csv")
     if not os.path.exists(majors_csv_path):
-        alt_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+        alt_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_majors.csv")
         if os.path.exists(alt_path):
             majors_csv_path = alt_path
         else:
-            print("⚠️ all_abington_majors_combined(5).csv not found")
-            majors_csv_path = None
+            majors_csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+            if not os.path.exists(majors_csv_path):
+                alt_path2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+                majors_csv_path = alt_path2 if os.path.exists(alt_path2) else None
+                if not majors_csv_path:
+                    print("⚠️ nith_majors.csv / all_abington_majors_combined(5).csv not found")
     
     if majors_csv_path and os.path.exists(majors_csv_path):
         df_majors = pd.read_csv(majors_csv_path)
@@ -1885,9 +1887,9 @@ def setup_environment(whatIfUpload=None, user_id='default'):
 
     # ---- LLM Instances ----
     global llm1, llm2, llm_classifier
-    llm1 = create_chat_model(PRIMARY_MODEL_NAME, temperature=0)
-    llm2 = create_chat_model(PRIMARY_MODEL_NAME, temperature=0)
-    llm_classifier = create_chat_model(CLASSIFIER_MODEL_NAME, temperature=0)
+    llm1 = create_chat_model(PRIMARY_MODEL_NAME, temperature=0, max_tokens=1500)
+    llm2 = create_chat_model(PRIMARY_MODEL_NAME, temperature=0, max_tokens=1500)
+    llm_classifier = create_chat_model(CLASSIFIER_MODEL_NAME, temperature=0, max_tokens=600)
     print("✅ LLMs initialized.")
 
 
@@ -2078,7 +2080,7 @@ def _clean_major_phrase(text: str) -> str:
     text = re.sub(r"[^a-z\s]", " ", text)
     stopwords = {
         "major", "degree", "program", "student", "studying", "study", "in", "of",
-        "ba", "bs", "b", "a", "s", "abington", "penn", "state", "university",
+        "ba", "bs", "b", "a", "s", "btech", "abington", "penn", "state", "university", "nith", "nit", "hamirpur",
         "freshman", "sophomore", "junior", "senior", "first", "second", "third", "fourth", "year"
     }
     tokens = [t for t in text.split() if t not in stopwords and len(t) > 2]
@@ -2098,14 +2100,38 @@ def normalize_major_name(extracted_major: str) -> str:
     if not user_tokens and not user_clean:
         return None
 
+    # Check common NIT Hamirpur aliases first
+    major_aliases = {
+        "cse": "Computer Science and Engineering, B.Tech. (NIT Hamirpur)",
+        "cs": "Computer Science and Engineering, B.Tech. (NIT Hamirpur)",
+        "computer science": "Computer Science and Engineering, B.Tech. (NIT Hamirpur)",
+        "comp sci": "Computer Science and Engineering, B.Tech. (NIT Hamirpur)",
+        "ece": "Electronics and Communication Engineering, B.Tech. (NIT Hamirpur)",
+        "ee": "Electrical Engineering, B.Tech. (NIT Hamirpur)",
+        "electrical": "Electrical Engineering, B.Tech. (NIT Hamirpur)",
+        "me": "Mechanical Engineering, B.Tech. (NIT Hamirpur)",
+        "mechanical": "Mechanical Engineering, B.Tech. (NIT Hamirpur)",
+        "ce": "Civil Engineering, B.Tech. (NIT Hamirpur)",
+        "civil": "Civil Engineering, B.Tech. (NIT Hamirpur)",
+    }
+    if user_clean in major_aliases:
+        return major_aliases[user_clean]
+    if user_major.lower() in major_aliases:
+        return major_aliases[user_major.lower()]
+
     # Load majors CSV to get available majors
-    majors_csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+    majors_csv_path = os.path.join(os.path.dirname(__file__), "nith_majors.csv")
     if not os.path.exists(majors_csv_path):
-        alt_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+        alt_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_majors.csv")
         if os.path.exists(alt_path):
             majors_csv_path = alt_path
         else:
-            return extracted_major  # Return as-is if CSV not found
+            majors_csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+            if not os.path.exists(majors_csv_path):
+                alt_path2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+                majors_csv_path = alt_path2 if os.path.exists(alt_path2) else None
+                if not majors_csv_path:
+                    return extracted_major
     
     try:
         df_majors = pd.read_csv(majors_csv_path)
@@ -2315,7 +2341,7 @@ def _classify_intent_llm(
         )
 
     system_prompt = (
-        "You are an intent classifier for a Penn State Abington advising assistant. "
+        "You are an intent classifier for an NIT Hamirpur advising assistant. "
         "Classify the student's message into exactly one routing label.\n\n"
         + PRIVATE_REASONING_GUIDANCE
         + "\n\nOutput contract:\n"
@@ -2330,9 +2356,9 @@ def _classify_intent_llm(
         "- policy: The student asks about institutional rules, deadlines, or processes. "
         "Examples: 'late drop deadline', 'how do I audit a course?', 'withdraw policy'.\n"
         "- course_info: The student asks about a specific course's prerequisites, title, description, or role. "
-        "Examples: 'what are CMPSC 488 prereqs?', 'what is ENGL 15?'.\n"
+        "Examples: 'what are CS-111 prereqs?', 'what is MA-111?'.\n"
         "- major_requirements: The student asks what a major requires in general, not their personal record. "
-        "Examples: 'what courses are required for Computer Science?', 'Business major prescribed courses'.\n"
+        "Examples: 'what courses are required for Computer Science?', 'Electrical Engineering major prescribed courses'.\n"
         "- general_chat: Anything else or unclear intent. Example: 'thanks', 'can you explain that?'."
     )
     prompt = f"""Student has transcript uploaded: {has_transcript}
@@ -2552,7 +2578,7 @@ def _build_reasoning_plan(
         )
 
     system_prompt = (
-        "You are the REASONING ROUTER for a Penn State Abington advising chatbot. "
+        "You are the REASONING ROUTER for an NIT Hamirpur advising chatbot. "
         "Your job is to classify the student's intent and decide what data the response pipeline needs.\n\n"
         + PRIVATE_REASONING_GUIDANCE
         + "\n\nOutput contract:\n"
@@ -2575,7 +2601,7 @@ def _build_reasoning_plan(
         "- policy: Institutional rules, dates, procedures, or deadlines. "
         "Example: 'what is the late drop deadline?'.\n"
         "- course: Specific course info such as prerequisites, description, title, or credits. "
-        "Example: 'what are CMPSC 488 prerequisites?'.\n"
+        "Example: 'what are CS-111 prerequisites?'.\n"
         "- major: General catalog major requirements, not personal transcript review. "
         "Example: 'what does the Computer Science major require?'.\n"
         "- transcript: Other transcript/planning requests. Example: 'how many credits do I have left?'.\n"
@@ -3105,19 +3131,31 @@ def aggregate_and_generate_response(user_question=None):
     # Step 2: Deterministic planning
     from graduationFlowchart import generate_semester_plan
     
-    courses_csv = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
-    majors_csv = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+    courses_csv = os.path.join(os.path.dirname(__file__), "nith_courses.csv")
+    majors_csv = os.path.join(os.path.dirname(__file__), "nith_majors.csv")
 
     # Ensure CSV paths exist
     if not os.path.exists(courses_csv):
-        alt_courses = os.path.join(os.path.dirname(__file__), "..", "LLM", "processed_psu_courses.csv")
+        alt_courses = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_courses.csv")
         if os.path.exists(alt_courses):
             courses_csv = alt_courses
+        else:
+            courses_csv = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
+            if not os.path.exists(courses_csv):
+                alt_courses2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "processed_psu_courses.csv")
+                if os.path.exists(alt_courses2):
+                    courses_csv = alt_courses2
     
     if not os.path.exists(majors_csv):
-        alt_majors = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+        alt_majors = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_majors.csv")
         if os.path.exists(alt_majors):
             majors_csv = alt_majors
+        else:
+            majors_csv = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+            if not os.path.exists(majors_csv):
+                alt_majors2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+                if os.path.exists(alt_majors2):
+                    majors_csv = alt_majors2
     
     # Normalize major name before planning
     extracted_major = student_data.get("major")
@@ -3139,7 +3177,7 @@ def aggregate_and_generate_response(user_question=None):
                     + "\n\nOutput contract:\n"
                     "- Return only the full major name, no label and no explanation.\n"
                     "- Prefer the exact university wording when visible. Example output: "
-                    "Computer Science, B.S. (Abington)\n"
+                    "Computer Science and Engineering, B.Tech.\n"
                     "- If no major is visible, return UNKNOWN."
                 )),
                 HumanMessage(content=f"Transcript excerpt:\n{transcript_context[:1000]}\n\nMajor:")
@@ -3150,7 +3188,7 @@ def aggregate_and_generate_response(user_question=None):
             pass
     
     if not student_data.get("major"):
-        return "I couldn't determine your major from the transcript. Please specify your major (e.g., 'Computer Science, B.S. (Abington)') or contact support."
+        return "I couldn't determine your major from the transcript. Please specify your major (e.g., 'Computer Science and Engineering, B.Tech.') or contact support."
     
     try:
         plan_structure = generate_semester_plan(
@@ -3245,9 +3283,13 @@ def simple_extract_major_and_year(user_text):
     
     # Extract major - try to find in CSV
     try:
-        csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+        csv_path = os.path.join(os.path.dirname(__file__), "nith_majors.csv")
         if not os.path.exists(csv_path):
-            csv_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+            csv_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_majors.csv")
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+            if not os.path.exists(csv_path):
+                csv_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
         majors_df = pd.read_csv(csv_path)
         
         # Common major keywords
@@ -3262,7 +3304,7 @@ def simple_extract_major_and_year(user_text):
         for keyword, variations in major_keywords.items():
             if any(var in text_lower for var in variations):
                 # Find matching major in CSV
-                matching = majors_df[majors_df['Major Name'].str.contains(keyword, case=False, na=False)]
+                matching = majors_df[majors_df['Major Name'].str.contains(keyword, case=False, na=False, regex=False)]
                 if not matching.empty:
                     major = matching.iloc[0]['Major Name']
                     break
@@ -3285,10 +3327,13 @@ def extract_major_and_year_from_text(user_text, conversation_history):
     """Extract major and year level from user text using LLM."""
     try:
         # Get list of available majors from CSV
-        csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+        csv_path = os.path.join(os.path.dirname(__file__), "nith_majors.csv")
         if not os.path.exists(csv_path):
-            # Try alternative path
-            csv_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+            csv_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_majors.csv")
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+            if not os.path.exists(csv_path):
+                csv_path = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
         majors_df = pd.read_csv(csv_path)
         available_majors = majors_df['Major Name'].tolist()[:50]  # Limit to first 50 for prompt size
         
@@ -3337,15 +3382,15 @@ YEAR: [freshman OR sophomore OR junior OR senior OR UNKNOWN]
 
 Examples:
 Student: "I'm a computer science freshman"
-MAJOR: Computer Science, B.S. (Abington)
+MAJOR: Computer Science and Engineering, B.Tech.
 YEAR: freshman
 
-Student: "biology sophomore"
-MAJOR: Biology, B.S. (Abington)
+Student: "electrical sophomore"
+MAJOR: Electrical Engineering, B.Tech.
 YEAR: sophomore
 
-Student: "I'm a first year psych major"
-MAJOR: Psychological and Social Sciences, B.A. (Abington)
+Student: "I'm a first year mechanical student"
+MAJOR: Mechanical Engineering, B.Tech.
 YEAR: freshman
 
 Student: "give me a plan"
@@ -3461,7 +3506,7 @@ YEAR: UNKNOWN"""
         if major and major != 'UNKNOWN':
             # Check if major is in the list or find close match
             df = majors_df
-            matching_major = df[df['Major Name'].str.contains(major, case=False, na=False)]
+            matching_major = df[df['Major Name'].str.contains(major, case=False, na=False, regex=False)]
             if not matching_major.empty:
                 major = matching_major.iloc[0]['Major Name']
             else:
@@ -3772,7 +3817,7 @@ def _build_course_lookup_draft_with_tools(
             conversation_history=None,
             trace=trace,
             preferred_strategy="generic_authoritative_lookup",
-            preferred_domains=["psu.edu", "pennstate.edu"],
+            preferred_domains=["nith.ac.in"],
             required_domain_mode="preferred",
         )
         web_response = _research_answer_text(search_result)
@@ -3784,8 +3829,8 @@ def _build_course_lookup_draft_with_tools(
     return (
         (
             "I want to make sure I give you the right course details, but I couldn't locate that course in the "
-            "catalog. Could you double-check the course code (Penn State codes look like 'CMPSC 131' or "
-            "'MATH 140')? If you share the subject area or what you're hoping the course covers, I can also "
+            "catalog. Could you double-check the course code (NIT Hamirpur codes look like 'CS-111' or "
+            "'MA-111')? If you share the subject area or what you're hoping the course covers, I can also "
             "suggest a few alternatives."
         ),
         [],
@@ -3819,7 +3864,7 @@ def _build_policy_lookup_draft(
             conversation_history=conversation_history,
             trace=trace,
             preferred_strategy="deadline_exact_date",
-            preferred_domains=["abington.psu.edu", "psu.edu", "pennstate.edu"],
+            preferred_domains=["nith.ac.in"],
             required_domain_mode="strict",
         )
         exact_date_response = _research_answer_text(search_result)
@@ -3836,7 +3881,7 @@ def _build_policy_lookup_draft(
                 response = llm2.invoke([
                     SystemMessage(content=(
                         ADVISOR_PERSONA
-                        + "\n\nFor this turn you are the POLICY ANSWERER. Answer a Penn State policy, "
+                        + "\n\nFor this turn you are the POLICY ANSWERER. Answer an NIT Hamirpur policy, "
                         "deadline, registration, or advising-process question using ONLY the provided policy text.\n\n"
                         + PRIVATE_REASONING_GUIDANCE
                         + "\n\nPrivate answer checklist (do not reveal):\n"
@@ -3894,20 +3939,37 @@ def _build_policy_lookup_draft(
 
     if allowed_tools is None or "web_search" in allowed_tools:
         preferred_strategy = "deadline_exact_date" if requires_exact_date else "generic_authoritative_lookup"
+        domains = ["nith.ac.in"]
         search_result = _run_shared_search_pipeline(
             user_id=user_id,
             question_text=contextual_question,
             conversation_history=conversation_history,
             trace=trace,
             preferred_strategy=preferred_strategy,
-            preferred_domains=["abington.psu.edu", "psu.edu", "pennstate.edu"],
+            preferred_domains=domains,
             required_domain_mode="strict" if requires_exact_date else "preferred",
         )
         web_response = _research_answer_text(search_result)
         if web_response:
             metadata.update(_resolved_search_to_metadata(search_result))
             return web_response, tools_used + ["web_search"], metadata
-    return "I couldn't find that policy information. Please rephrase your question or check the Penn State website directly.", tools_used, metadata
+
+    if any(k in contextual_question.lower() for k in ["nit hamirpur", "nith", "hamirpur", "cgpa", "backlog", "kt", "placement", "b.tech", "cse"]):
+        try:
+            fallback_prompt = (
+                ADVISOR_PERSONA
+                + "\n\nAnswer the student's question directly and thoroughly using the NIT Hamirpur academic advising context and framework defined in your persona."
+            )
+            nit_response = llm2.invoke([
+                SystemMessage(content=fallback_prompt),
+                HumanMessage(content=f"{_get_current_datetime_context()}\nQuestion: {contextual_question}")
+            ]).content
+            if nit_response:
+                return nit_response, tools_used or ["advising_knowledge"], metadata
+        except Exception as e:
+            print(f"⚠️ NIT Hamirpur advising fallback failed: {e}")
+
+    return "I couldn't find that policy information. Please rephrase your question or check the official university website directly.", tools_used, metadata
 
 
 def _build_semester_specific_major_draft(
@@ -4073,22 +4135,20 @@ def _call_prerequisite_graph(query: str, ctx: Dict[str, Any]) -> str:
     """Look up enrollment + concurrent prereqs for every course code in the query.
 
     The planner's query is expected to be a comma-separated or whitespace list
-    of candidate course codes (e.g. "CMPSC 131,CMPSC 132,MATH 140"). We extract
-    every PSU-style code and call the underlying graph for each. The output
+    of candidate course codes (e.g. "CS-111, CS-121, MA-111"). We extract
+    every course code and call the underlying graph for each. The output
     format mirrors ``get_course_prerequisites`` so the synthesizer (and the
     deterministic prereq validator) can parse it predictably.
     """
     if course_graph is None:
         return ""
-    # 1-3 digit numbers with optional single-letter suffix to cover the full
-    # PSU catalog shape (SOC 1, ART 11, MATH 21, ENGL 15, CMPSC 131, ART 122Y).
-    codes = re.findall(r"\b([A-Z]{2,})\s+(\d{1,3}[A-Z]?)\b", query, flags=re.IGNORECASE)
+    codes = _COURSE_CODE_FINDER.findall(query)
     if not codes:
         return ""
     seen: List[str] = []
     parts: List[str] = []
     for prefix, number in codes:
-        code = f"{prefix.upper()} {number}"
+        code = _normalize_course_code(prefix, number)
         if code in seen:
             continue
         seen.append(code)
@@ -4125,7 +4185,7 @@ def _call_web_search(query: str, ctx: Dict[str, Any]) -> str:
             conversation_history=None,
             trace=trace,
             preferred_strategy="generic_authoritative_lookup",
-            preferred_domains=["abington.psu.edu", "psu.edu", "pennstate.edu"],
+            preferred_domains=["nith.ac.in"],
             required_domain_mode="preferred",
         )
     except Exception as e:
@@ -4146,19 +4206,12 @@ EXECUTOR_TOOLS: Dict[str, Callable[[str, Dict[str, Any]], str]] = {
 }
 
 
-# PSU course numbers are 2-3 digits with an optional single-letter suffix
-# (e.g. ART 11, MATH 21, ENGL 15, CMPSC 131, ENGL 202D, ART 122Y). Older
-# regexes in this file require exactly 3 digits, which silently drops every
-# 2-digit code and is part of the reason the user's Art + Accounting plan
-# could not retrieve prereqs for ART 11. We also accept 1-digit PSU codes
-# (SOC 1, CAS 1, ART 1) — confirmed by runtime logs from the Psych double
-# major, where "SOC 1" escaped both the rewrite and the backfill scan.
-_COURSE_CODE_FINDER = re.compile(r"\b([A-Z]{2,})\s+(\d{1,3}[A-Z]?)\b")
+_COURSE_CODE_FINDER = re.compile(r"\b([A-Z]{2,8}(?:/[A-Z]{2,8})*)[-\s]+(\d{1,3}[A-Z]?)\b")
 _PREREQ_HEADER_FINDER = re.compile(
-    r"Prerequisites for\s+([A-Z]{2,})\s+(\d{1,3}[A-Z]?)\s*:", re.IGNORECASE
+    r"Prerequisites for\s+([A-Z]{2,8}(?:/[A-Z]{2,8})*)[-\s]+(\d{1,3}[A-Z]?)\s*:", re.IGNORECASE
 )
 _PREREQ_NOT_FOUND_FINDER = re.compile(
-    r"No course named '\s*([A-Z]{2,})\s+(\d{1,3}[A-Z]?)\s*' found\.", re.IGNORECASE
+    r"No course named '\s*([A-Z]{2,8}(?:/[A-Z]{2,8})*)[-\s]+(\d{1,3}[A-Z]?)\s*' found\.", re.IGNORECASE
 )
 
 
@@ -4167,7 +4220,7 @@ def _normalize_course_code(prefix: str, number: str) -> str:
 
 
 def _collect_codes_from_text(text: str) -> List[str]:
-    """Return every PSU-style course code found in ``text`` (deduped, ordered)."""
+    """Return every course code found in ``text`` (deduped, ordered)."""
     if not text:
         return []
     seen: Dict[str, None] = {}  # ordered set
@@ -4663,29 +4716,29 @@ def _build_major_lookup_draft(
         system_content = (
             ADVISOR_PERSONA
             + "\n\nFor this turn you are the major-lookup synthesizer. You receive verified "
-            "Penn State data below, organized into labeled sections. Ground every Penn State-specific "
+            "NIT Hamirpur data below, organized into labeled sections. Ground every NIT Hamirpur-specific "
             "claim in that data. Use exact course codes and titles as they appear there.\n\n"
             + PRIVATE_REASONING_GUIDANCE
             + "\n\nPrivate synthesis checklist (do not reveal):\n"
             "1. Identify the requested major(s), semester horizon, student year, and whether transcript data is present.\n"
             "2. List candidate courses only from the verified data.\n"
             "3. Check prerequisite_graph before placing each course in a semester.\n"
-            "4. Fill gen-ed/elective buckets with categorized labels and examples when exact courses are not verified.\n"
+            "4. Fill elective/open course buckets with categorized labels and examples when exact courses are not verified.\n"
             "5. Confirm the response scope: one semester, multiple semesters, or direct major requirements.\n\n"
             "Required semester block shape:\n"
             "Semester N:\n"
             "COURSE 123: Course Title (prerequisites: None)\n"
             "COURSE 234: Course Title (prerequisites: COURSE 123)\n"
-            "Gen Ed (GH - Humanities) — examples: ART 001, HIST 148 (prerequisites: None)\n"
-            "Total Credits: 15\n\n"
+            "Open Elective (Humanities/Management) — examples: HS-101, MB-101 (prerequisites: None)\n"
+            "Total Credits: 20\n\n"
             "Good examples:\n"
-            "- 'PSU 1: First-Year Seminar Abington (prerequisites: None)' when PSU 1 appears in verified course data.\n"
-            "- 'CMPSC 488: Senior Project (prerequisites: CMPSC 487W)' only when prerequisite_graph supports that edge.\n"
-            "- 'Gen Ed (GQ - Quantification) — examples: STAT 200, MATH 110' when the exact bucket is known but the final choice needs advisor confirmation.\n\n"
+            "- 'CS-111: Computer Programming (prerequisites: None)' when CS-111 appears in verified course data.\n"
+            "- 'CS-211: Data Structures (prerequisites: CS-111)' only when prerequisite_graph supports that edge.\n"
+            "- 'Open Elective (Management) — examples: MB-101, HS-102' when the exact bucket is known but the final choice needs advisor confirmation.\n\n"
             "Bad examples:\n"
             "- 'Elective' with no category or examples.\n"
-            "- 'CMPSC 132 (prerequisites: None)' when prerequisite_graph says CMPSC 131 is enforced.\n"
-            "- A quoted one-paragraph plan such as 'Semester 1: ... Total Credits: 15'.\n\n"
+            "- 'CS-121 (prerequisites: None)' when prerequisite_graph says CS-111 is enforced.\n"
+            "- A quoted one-paragraph plan such as 'Semester 1: ... Total Credits: 20'.\n\n"
             "USER-FACING LANGUAGE RULE: never use internal terms in your answer. The student does not "
             "know what the following words mean and must NOT see them: 'retrieved bundle', 'retrieval', "
             "'retrieved', 'bundle', 'majors_retriever', 'course_retriever', 'prerequisite_graph', "
@@ -4707,8 +4760,8 @@ def _build_major_lookup_draft(
             "MUST end with a parenthetical of the form '(prerequisites: <list>)'. Always include the "
             "annotation — the system rewrites the contents from verified data before shipping, so just "
             "make sure each course line has the parenthetical present. Example shape:\n"
-            "  'CMPSC 132: Programming and Computation II (prerequisites: CMPSC 131)'\n"
-            "  'MATH 140: Calculus I (prerequisites: None)'\n"
+            "  'CS-121: Data Structures (prerequisites: CS-111)'\n"
+            "  'MA-111: Engineering Mathematics-I (prerequisites: None)'\n"
             "This is required for every course recommendation; the student needs to see what each "
             "course requires before they can register.\n\n"
             "RECOMMENDATION SPECIFICITY RULES (enforced; the response will be re-tried if violated):\n"
@@ -4746,7 +4799,7 @@ def _build_major_lookup_draft(
         human_content = (
             f"Question: {user_question}\n\n"
             f"Brief:\n{synthesis_brief}\n\n"
-            f"Verified Penn State data:\n{_format_retrieval_bundle_for_prompt(bundle)}"
+            f"Verified NIT Hamirpur data:\n{_format_retrieval_bundle_for_prompt(bundle)}"
         )
         try:
             response = llm2.invoke([
@@ -4818,7 +4871,7 @@ def _build_major_lookup_draft(
             conversation_history=None,
             trace=trace,
             preferred_strategy="generic_authoritative_lookup",
-            preferred_domains=["abington.psu.edu", "psu.edu", "pennstate.edu"],
+            preferred_domains=["nith.ac.in"],
             required_domain_mode="preferred",
         )
         web_response = _research_answer_text(search_result)
@@ -4906,9 +4959,9 @@ def _major_lookup_soft_ask(
         "I want to give you a solid answer here, but I couldn't pin down everything "
         "I'd need to map out an accurate course plan from what we have so far."
         f"{bundle_summary} "
-        "Could you confirm the full program name(s) as they appear in the Penn State "
-        "catalog (for example, 'Computer Science, B.S. (Abington)' or 'Accounting, B.S. "
-        "(Abington)')? If this is a double major, please list both. Once I have that I "
+        "Could you confirm the full program name(s) as they appear in the NIT Hamirpur "
+        "catalog (for example, 'Computer Science and Engineering, B.Tech.' or 'Electrical "
+        "Engineering, B.Tech.')? Once I have that I "
         "can pull the requirements and map out the right courses for you."
     )
 
@@ -4923,7 +4976,7 @@ def _build_general_academic_chat_draft(
 ) -> Tuple[str, List[str], Dict[str, Any]]:
     if not is_academic_or_policy_question(user_question):
         return (
-            "Sorry, this question is beyond the scope of this conversation. I can only help with academic advising, course planning, Penn State policies, and graduation requirements.",
+            "Sorry, this question is beyond the scope of this conversation. I can only help with academic advising, course planning, university policies, and graduation requirements.",
             [],
             {"source": "scope_guard"},
         )
@@ -4950,12 +5003,12 @@ def _build_general_academic_chat_draft(
     system_content = (
         ADVISOR_PERSONA
         + "\n\nFor this turn you are the GENERAL ADVISING ANSWERER. Help with academic planning, "
-        "prerequisites, major requirements, graduation planning, and Penn State academic questions.\n\n"
+        "prerequisites, major requirements, graduation planning, and NIT Hamirpur academic questions.\n\n"
         + PRIVATE_REASONING_GUIDANCE
         + "\n\nPrivate answer checklist (do not reveal):\n"
         "1. Determine whether the message is a follow-up to recent conversation.\n"
         "2. Use student information and retrieved context when available.\n"
-        "3. If the answer needs exact Penn State facts that are not in context, say what is missing instead of guessing.\n"
+        "3. If the answer needs exact NIT Hamirpur facts that are not in context, say what is missing instead of guessing.\n"
         "4. Keep the answer in the student's language and ask at most one clarifying question when needed.\n\n"
         "Examples:\n"
         "- If context includes a transcript and the student asks 'why that schedule?', explain using the prior plan and prerequisites.\n"
@@ -5090,6 +5143,19 @@ def _build_research_lookup_draft(
     if answer_text:
         return answer_text, ["web_search"], {
             "source": "shared_search_pipeline",
+            **_resolved_search_to_metadata(search_result),
+        }
+    chat_resp, chat_tools, chat_meta = _build_general_academic_chat_draft(
+        user_question,
+        conversation_history,
+        student_data=None,
+        trace=trace,
+        allowed_tools=None,
+        user_id=user_id,
+    )
+    if chat_resp and "beyond the scope" not in chat_resp.lower():
+        return chat_resp, chat_tools or ["advising_knowledge"], {
+            "source": "general_academic_chat",
             **_resolved_search_to_metadata(search_result),
         }
     return (
@@ -5368,13 +5434,28 @@ def _execute_orchestration_plan(
         draft_response=draft_response,
         metadata=metadata,
     )
-    final_response = _run_executor_stage(
-        plan=plan,
-        draft_response=draft_response,
-        conversation_history=conversation_history,
-        supporting_context=supporting_context,
-        retry_reason=retry_reason,
-    )
+    # Efficiency optimization: If draft_response is already available and no retry reason,
+    # pass it directly to the finalizer stage to avoid redundant executor re-synthesis
+    if draft_response and not retry_reason and metadata.get("source") in {
+        "major_lookup",
+        "policy_lookup",
+        "general_academic_chat",
+        "deterministic_plan",
+        "shared_search_pipeline",
+        "conversation_plan_slice",
+        "conversation_profile_recall",
+        "prerequisite_graph",
+        "course_retriever",
+    }:
+        final_response = draft_response
+    else:
+        final_response = _run_executor_stage(
+            plan=plan,
+            draft_response=draft_response,
+            conversation_history=conversation_history,
+            supporting_context=supporting_context,
+            retry_reason=retry_reason,
+        )
     return ExecutorResult(
         response=final_response,
         tools_used=list(dict.fromkeys(tools_used)),
@@ -5564,21 +5645,21 @@ def generate_plan_from_major_and_year(major, year_level, target_grad_in_years=4)
     if year_level not in ['freshman', 'sophomore', 'junior', 'senior']:
         year_level = _fuzzy_year_from_text(year_level or "") or "freshman"
 
-    # Calculate semesters completed and remaining
-    typical_total_credits = 120
+    # Calculate semesters completed and remaining (NIT Hamirpur B.Tech = 160 credits total, ~20 cr/sem)
+    typical_total_credits = 160
     year_lower = year_level.lower()
 
     if year_lower == "freshman":
         assumed_completed = 0
         semesters_completed = 0
     elif year_lower == "sophomore":
-        assumed_completed = 30
+        assumed_completed = 40
         semesters_completed = 2
     elif year_lower == "junior":
-        assumed_completed = 60
+        assumed_completed = 80
         semesters_completed = 4
     elif year_lower == "senior":
-        assumed_completed = 90
+        assumed_completed = 120
         semesters_completed = 6
     else:
         assumed_completed = 0
@@ -5586,11 +5667,9 @@ def generate_plan_from_major_and_year(major, year_level, target_grad_in_years=4)
 
     total_credits_needed = max(0, typical_total_credits - assumed_completed)
     semesters_remaining = 8 - semesters_completed
-    credits_per_semester = total_credits_needed / semesters_remaining if semesters_remaining > 0 else 15
-    # Keep plans spread across expected timeline (freshman->8, sophomore->6, etc.)
-    # Prefer ~15-credit semesters when possible, allow up to 18 only when needed.
-    planning_min_credits = 15
-    planning_max_credits = 15 if total_credits_needed <= semesters_remaining * 15 else 18
+    credits_per_semester = total_credits_needed / semesters_remaining if semesters_remaining > 0 else 20
+    planning_min_credits = 16
+    planning_max_credits = 24
     
     print(f"📊 Student status: {year_level}, {assumed_completed} credits completed, {total_credits_needed} credits needed")
     print(f"📊 Semesters remaining: {semesters_remaining} ({credits_per_semester:.1f} credits per semester)")
@@ -5599,21 +5678,33 @@ def generate_plan_from_major_and_year(major, year_level, target_grad_in_years=4)
     major_norm = normalize_major_name(major)
     if not major_norm:
         return (
-            f"I want to build out the right plan for you, but I couldn't match '{major}' to a Penn State Abington program. "
-            "Could you share the exact program name as it appears in the catalog "
-            "(for example, 'Business, B.A. (Abington)' or 'Computer Science, B.S. (Abington)')? "
-            "Once I have the official name I can pull the requirements and lay out a 15-credit semester."
+            f"I want to build out the right plan for you, but I couldn't match '{major}' to an NIT Hamirpur program. "
+            "Could you share the program name as it appears in the curriculum "
+            "(for example, 'Computer Science and Engineering, B.Tech' or 'Electronics and Communication Engineering, B.Tech')? "
+            "Once I have the official name I can pull the requirements and lay out your semester schedule."
         )
-    courses_csv = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
-    majors_csv = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+    courses_csv = os.path.join(os.path.dirname(__file__), "nith_courses.csv")
+    majors_csv = os.path.join(os.path.dirname(__file__), "nith_majors.csv")
     if not os.path.exists(courses_csv):
-        alt_courses = os.path.join(os.path.dirname(__file__), "..", "LLM", "processed_psu_courses.csv")
+        alt_courses = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_courses.csv")
         if os.path.exists(alt_courses):
             courses_csv = alt_courses
+        else:
+            courses_csv = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
+            if not os.path.exists(courses_csv):
+                alt_courses2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "processed_psu_courses.csv")
+                if os.path.exists(alt_courses2):
+                    courses_csv = alt_courses2
     if not os.path.exists(majors_csv):
-        alt_majors = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+        alt_majors = os.path.join(os.path.dirname(__file__), "..", "LLM", "nith_majors.csv")
         if os.path.exists(alt_majors):
             majors_csv = alt_majors
+        else:
+            majors_csv = os.path.join(os.path.dirname(__file__), "all_abington_majors_combined(5).csv")
+            if not os.path.exists(majors_csv):
+                alt_majors2 = os.path.join(os.path.dirname(__file__), "..", "LLM", "all_abington_majors_combined(5).csv")
+                if os.path.exists(alt_majors2):
+                    majors_csv = alt_majors2
 
     # Deterministic schedule using graduationFlowchart
     from graduationFlowchart import generate_semester_plan

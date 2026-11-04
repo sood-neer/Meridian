@@ -1,8 +1,16 @@
-# macOS
+# Operating System
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+**/.DS_Store
 
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -11,40 +19,62 @@ __pycache__/
 .eggs/
 dist/
 build/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Virtual environments
 venv/
 env/
 .venv/
+ENV/
+env.bak/
+venv.bak/
 
-# IDE
+# Node & Frontend
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE & Editors
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+*.sublime-project
+*.sublime-workspace
 
-# Logs
+# Logs & Runtime State
 *.log
 flask.log
 flask_server.log
-
-# Local runtime state
 .runtime/
+tmp/
+temp/
 
-# Chroma vector DB (local data)
+# Chroma vector DB & embeddings (local data)
 chroma_data/
+chroma_courses/
+**/chroma_data/
+**/chroma_courses/
 
-# Environment variables (never commit real keys)
+# Environment variables (strict security: never commit real credentials)
 .env
-.env.local
-.env.*.local
-
-# Markdown docs (keep locally, main README.md stays in repo)
-*.md
-!README.md
+.env.*
+*.env
+*.env.*
+!*.env.example
+!.env.example
 
 # Uploaded transcripts / personal PDFs (never commit)
-IAAS/LLMAcadamic-Advisor/LLM/*.pdf
-
-# Generated graph cache (regenerated on demand from CSVs + code)
+*.pdf
+!IAAS/LLMAcadamic-Advisor/LLM/PennState_Combined_Advising_and_Registrar_VERBATIM.pdf
 IAAS/LLMAcadamic-Advisor/LLM/cache/
+
+# Markdown docs (keep locally, root README.md stays in repo)
+*.md
+!README.md

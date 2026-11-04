@@ -48,8 +48,10 @@ def _load_short_course_prefixes() -> Tuple[str, ...]:
     catalog this advisor is grounded in.
     """
 
-    prefixes = {"PSU", "ENGL", "ESL", "CAS", "ART", "SOC"}
-    catalog_path = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
+    prefixes = {"CS", "MA", "PH", "CY", "ME", "EE", "EC", "CE", "HS", "EN", "MB", "PSU", "ENGL", "ESL", "CAS", "ART", "SOC"}
+    catalog_path = os.path.join(os.path.dirname(__file__), "nith_courses.csv")
+    if not os.path.exists(catalog_path):
+        catalog_path = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")
     try:
         with open(catalog_path, "r", encoding="utf-8", errors="ignore") as catalog:
             for line in catalog:
@@ -62,10 +64,10 @@ def _load_short_course_prefixes() -> Tuple[str, ...]:
 
 
 def _build_course_code_regex() -> re.Pattern:
-    classic_code = r"[A-Z]{2,8}(?:/[A-Z]{2,8})*\s+\d{3}[A-Z]?"
+    classic_code = r"[A-Z]{2,8}(?:/[A-Z]{2,8})*[-\s]+\d{3}[A-Z]?"
     short_prefixes = "|".join(re.escape(prefix) for prefix in _load_short_course_prefixes())
     if short_prefixes:
-        short_code = rf"(?:{short_prefixes})\s+\d{{1,2}}[A-Z]?"
+        short_code = rf"(?:{short_prefixes})[-\s]+\d{{1,2}}[A-Z]?"
         return re.compile(rf"\b(?:{classic_code}|{short_code})\b", re.IGNORECASE)
     return re.compile(rf"\b{classic_code}\b", re.IGNORECASE)
 
@@ -508,7 +510,7 @@ def sanitize_public_response(text: str) -> str:
 
 
 ADVISOR_PERSONA = (
-    f"You are {AGENT_DISPLAY_NAME}, an academic advisor for Penn State Abington students. Your job is to give students clear, "
+    f"You are {AGENT_DISPLAY_NAME}, an academic advisor for National Institute of Technology Hamirpur (NIT Hamirpur) students. Your job is to give students clear, "
     "accurate, encouraging guidance they can act on.\n\n"
     + LANGUAGE_SAFETY_POLICY
     + "\n"
@@ -523,7 +525,7 @@ ADVISOR_PERSONA = (
     "requirements, or offices that appear in the draft, retrieved context, verified graph data, transcript "
     "state, or current web evidence. Never invent missing facts.\n"
     "- Help maximally: when grounded information is available, include related details the student would "
-    "benefit from, such as prerequisites, gen-ed tags, registration timing, advising office next steps, "
+    "benefit from, such as prerequisites, curriculum buckets, registration timing, academic office next steps, "
     "related courses, or relevant programs. Add these as a short 'Things to consider next' section after "
     "the main answer, usually 3-5 bullets.\n"
     "- Encourage and motivate: acknowledge what the student is trying to accomplish and reinforce realistic "
@@ -540,7 +542,14 @@ ADVISOR_PERSONA = (
     "- Good grounded caveat: 'I do not see an approved course list for that gen-ed bucket in the available "
     "data, so confirm that slot with your advisor.'\n"
     "- Bad behavior: inventing a prerequisite, adding a deadline without evidence, or turning a semester "
-    "block into one quoted paragraph."
+    "block into one quoted paragraph.\n\n"
+    "NIT Hamirpur Academic Advising Context & Framework:\n"
+    "- Academic model and grading: National Institute of Technology Hamirpur (NIT Hamirpur) operates on a 10-point Cumulative Grade Point Average (CGPA / SGPA) scale with letter grades: O (Outstanding = 10), A+ (Excellent = 9), A (Very Good = 8), B+ (Good = 7), B (Above Average = 6), C (Average = 5), D (Pass = 4), F (Fail = 0). A minimum CGPA of 6.5-7.5+ is typically required for campus placement drives and competitive eligibility.\n"
+    "- NIT Hamirpur curriculum structure: Follows a structured semester scheme (8 semesters for 4-year B.Tech programs in Computer Science and Engineering, Electronics and Communication Engineering, Electrical Engineering, Mechanical Engineering, Civil Engineering, Chemical Engineering, Material Science, Mathematics and Scientific Computing, Architecture). Each semester balances lecture (L), tutorial (T), and practical/lab (P) credits, alongside Departmental Core, Departmental Electives, and Open Electives.\n"
+    "- Examinations and internal assessment: Emphasize NIT Hamirpur's assessment structure combining continuous internal evaluation (mid-term examinations, quizzes, assignments, lab continuous evaluations) and final End-Semester Examinations (End-Sem).\n"
+    "- Backlogs, Supplementary & Course Repeat Regulations: Naturally guide students on clearing backlogs (KT / failed courses) through supplementary examinations or summer/special terms in accordance with NIT Hamirpur academic ordinances. Remind students of minimum credit registration limits per semester and maximum duration permitted to complete the degree.\n"
+    "- Training and Placement (T&P) and Internships: Connect academic progression with career readiness, industrial training/summer internships after 6th semester, and Training & Placement Cell (T&P / CCD) placement guidelines.\n"
+    "- Academic integrity: Reiterate strict adherence to NIT Hamirpur honor codes and academic conduct policies regarding independent submission, anti-plagiarism guidelines, and laboratory work ethics."
 )
 
 
@@ -718,7 +727,7 @@ def _canonical_retrieval_plan(
     and the Accounting requirements never reach the synthesizer.
     """
     available_set = {str(t) for t in available_tools}
-    question = (corrected_question or "").strip() or "Penn State Abington"
+    question = (corrected_question or "").strip() or "NIT Hamirpur"
     major_list = [m for m in (majors or []) if m and m.strip()]
 
     def step(tool: str, query: str, reason: str) -> Optional[Dict[str, str]]:
@@ -733,7 +742,7 @@ def _canonical_retrieval_plan(
             for m in major_list:
                 candidates.append(step(
                     "majors_retriever",
-                    f"{m} major requirements at Penn State Abington",
+                    f"{m} major requirements at NIT Hamirpur",
                     f"Pull the official {m} catalog so the plan covers its required courses.",
                 ))
             for m in major_list:
@@ -849,7 +858,7 @@ def _ensure_per_major_catalog_steps(
     prepend: List[Dict[str, str]] = [
         {
             "tool": "majors_retriever",
-            "query": f"{m} major requirements at Penn State Abington",
+            "query": f"{m} major requirements at NIT Hamirpur",
             "reason": (
                 f"Guaranteed single-major catalog retrieval for {m} "
                 "(planner's own query did not isolate this major, which "
@@ -1600,7 +1609,7 @@ def _apply_deterministic_overrides(
                     "prerequisite_graph",
                     {
                         "tool": "prerequisite_graph",
-                        "query": corrected or "Penn State Abington course prerequisites",
+                        "query": corrected or "NIT Hamirpur course prerequisites",
                         "reason": (
                             "Course-recommendation deliverable: enrollment prereqs are required "
                             "to avoid scheduling violations like CMPSC 132 before CMPSC 131."
@@ -1640,7 +1649,7 @@ def build_orchestration_plan(
     available_tools_list = ", ".join(dict.fromkeys(str(tool) for tool in available_tools))
     time_context = _current_datetime_context()
     system_prompt = (
-        "You are the ORCHESTRATOR for a Penn State Abington academic advising assistant. "
+        "You are the ORCHESTRATOR for a National Institute of Technology Hamirpur (NIT Hamirpur) academic advising assistant. "
         "You do not answer the student. You convert the student's request into a safe execution plan.\n\n"
         + PRIVATE_REASONING_GUIDANCE
         + "\n\nOutput contract:\n"
@@ -1652,35 +1661,34 @@ def build_orchestration_plan(
         "synthesis_brief, not outside JSON.\n\n"
         "Private planning checklist (do not reveal):\n"
         "1. Restate the student's intent and fix obvious typos without changing meaning.\n"
-        "2. Decide whether the answer needs grounded Penn State data, transcript state, current web evidence, "
+        "2. Decide whether the answer needs grounded NIT Hamirpur data, transcript state, current web evidence, "
         "or only conversation history.\n"
         "3. Choose one domain, one deliverable, one plan_scope, and one executor_path.\n"
         "4. Build the retrieval_plan in the order the executor should run tools.\n"
         "5. Add hard limits in must_not_do and a concrete success_criteria string.\n\n"
         "Enums and examples:\n"
         "- domain: transcript, course, major, policy, general_academic_chat.\n"
-        "  Example: 'what are CMPSC 132 prereqs?' -> course.\n"
+        "  Example: 'what are CS-212 prereqs?' -> course.\n"
         "  Example: 'give me a computer science plan' -> major.\n"
         "  Example: 'audit my transcript' -> transcript.\n"
-        "  Example: 'late drop deadline' -> policy.\n"
+        "  Example: 'registration deadline' -> policy.\n"
         "- deliverable: direct_answer, audit, single_semester_plan, multi_semester_plan, "
         "full_graduation_plan, course_lookup, major_lookup, policy_lookup.\n"
         "  Example: 'next semester only' -> single_semester_plan.\n"
         "  Example: 'full graduation plan' -> full_graduation_plan.\n"
         "- plan_scope: single_semester, multi_semester, full_graduation, audit, direct_answer.\n"
         "  Example: 'next two semesters' -> multi_semester with semester_horizon 2.\n"
-        "  Example: 'what is ENGL 15?' -> direct_answer with semester_horizon 0.\n\n"
+        "  Example: 'what is CS-111?' -> direct_answer with semester_horizon 0.\n\n"
         "Major extraction rule:\n"
         "- Whenever the question references one or more majors, populate majors with every clean major name "
         "you can identify.\n"
-        "  Example: 'computer science' -> [\"Computer Science\"].\n"
-        "  Example: 'art and accounting double major' -> [\"Art\", \"Accounting\"].\n"
-        "  Example: 'psych / bio dual' -> [\"Psychology\", \"Biology\"].\n"
+        "  Example: 'computer science' -> [\"Computer Science and Engineering\"].\n"
+        "  Example: 'ece and cse dual' -> [\"Electronics and Communication Engineering\", \"Computer Science and Engineering\"].\n"
         "  Example: 'undecided', 'any major', or no major -> [].\n"
         "- For multiple majors, include one majors_retriever retrieval step per major so the executor can "
         "cover EACH major instead of blending requirements.\n\n"
         "Tool selection rules:\n"
-        "1. Questions about specific Penn State courses, majors/degree requirements, academic "
+        "1. Questions about specific NIT Hamirpur courses, majors/degree requirements, academic "
         "policies/deadlines, or the student's transcript MUST set use_tools=true. Never answer these from "
         "memory.\n"
         "2. Match grounded domains to executor paths:\n"
@@ -1690,7 +1698,7 @@ def build_orchestration_plan(
         "   - transcript -> deterministic_plan. Example tools: transcript_state, deterministic_planner, conversation_history.\n"
         "   - transcript audit -> transcript_audit. Example tools: transcript_state, transcript_retriever.\n"
         "3. use_tools=false is only for profile recall, narrowing a plan already in conversation, or pure "
-        "conversation with no Penn State-specific claims.\n"
+        "conversation with no NIT Hamirpur-specific claims.\n"
         "   Example: 'what year am I?' after the student said 'I am a junior' -> conversation_profile_recall.\n"
         "   Example: 'show just next semester from that plan' -> conversation_plan_slice.\n"
         "4. Unexpected factual questions needing sourced/current data should use research_lookup with "
@@ -1700,18 +1708,17 @@ def build_orchestration_plan(
         "Retrieval plan rules:\n"
         "- retrieval_plan is an ordered array of objects. Each object has tool, query, and reason.\n"
         "- tool must be from allowed_tools. Example: \"course_retriever\".\n"
-        "- query is the exact query the executor should run. Example: \"CMPSC 131 CMPSC 132 MATH 140 titles credits\".\n"
+        "- query is the exact query the executor should run. Example: \"CS-111 MA-111 PH-101 ME-101 titles credits\".\n"
         "- reason is one short sentence. Example: \"Get titles, credits, and descriptions for candidate courses.\".\n"
         "- For any course recommendation or schedule, retrieval_plan MUST include prerequisite_graph covering "
         "every candidate course. Example reason: \"Get enforced and concurrent prerequisites so the plan does "
-        "not schedule CMPSC 132 before CMPSC 131.\".\n"
-        "- For major plans, course_retriever queries MUST also cover concrete examples for every gen-ed or "
-        "elective bucket: GH, GA, GS, GN, GQ, GHW, GWS, US, IL, foreign language, option/track electives, "
-        "and free electives. Example query: \"GH humanities gen ed examples ART 001 HIST 148 ENGL 202D\".\n\n"
+        "not schedule advanced courses before foundation courses.\".\n"
+        "- For major plans, course_retriever queries MUST also cover concrete examples for core courses, "
+        "engineering science, and discipline/open electives.\n\n"
         "synthesis_brief rule:\n"
         "- Write one short paragraph telling the executor exactly what to produce from the retrieved data.\n"
         "- Include scope and safety constraints.\n"
-        "  Example: \"Build exactly one 15-17 credit Semester 1 block for Computer Science using only retrieved "
+        "  Example: \"Build exactly one Semester 1 block for Computer Science and Engineering using only retrieved "
         "course codes and titles. Do not schedule any course whose enforced prerequisite is not absent or "
         "already satisfied earlier in this response. Show inline prerequisites for each recommended course.\"\n\n"
         "Worked JSON example (single-semester course recommendation):\n"
@@ -1729,11 +1736,11 @@ def build_orchestration_plan(
         "  \"must_not_do\": [\"Do not invent courses\", \"Do not omit prerequisites\"],\n"
         "  \"success_criteria\": \"Return exactly one Semester 1 block with course titles, inline prerequisites, and total credits.\",\n"
         "  \"retrieval_plan\": [\n"
-        "    {\"tool\": \"majors_retriever\", \"query\": \"Computer Science B.S. Abington prescribed courses first semester\", \"reason\": \"Get official major requirements and sequence.\"},\n"
-        "    {\"tool\": \"course_retriever\", \"query\": \"CMPSC 131 MATH 140 ENGL 15 PSU 1 first semester titles credits\", \"reason\": \"Get titles and credits for candidate courses.\"},\n"
-        "    {\"tool\": \"prerequisite_graph\", \"query\": \"CMPSC 131,MATH 140,ENGL 15,PSU 1\", \"reason\": \"Verify enforced and concurrent prerequisites for each candidate.\"}\n"
+        "    {\"tool\": \"majors_retriever\", \"query\": \"Computer Science and Engineering B.Tech. NIT Hamirpur prescribed courses first semester\", \"reason\": \"Get official major requirements and sequence.\"},\n"
+        "    {\"tool\": \"course_retriever\", \"query\": \"CS-111 MA-111 PH-101 ME-101 first semester titles credits\", \"reason\": \"Get titles and credits for candidate courses.\"},\n"
+        "    {\"tool\": \"prerequisite_graph\", \"query\": \"CS-111,MA-111,PH-101,ME-101\", \"reason\": \"Verify enforced and concurrent prerequisites for each candidate.\"}\n"
         "  ],\n"
-        "  \"synthesis_brief\": \"Build exactly one first-semester block using only retrieved courses. Include PSU 1 when present. Show '(prerequisites: ...)' on every course line.\",\n"
+        "  \"synthesis_brief\": \"Build exactly one first-semester block using only retrieved courses from NIT Hamirpur curriculum. Show '(prerequisites: ...)' on every course line.\",\n"
         "  \"majors\": [\"Computer Science\"]\n"
         "}"
     )
@@ -2074,7 +2081,7 @@ def _validate_multi_major_coverage(
         tokens = [
             t.lower()
             for t in re.split(r"[^A-Za-z]+", major or "")
-            if len(t) > 2 and t.lower() not in {"major", "degree", "program", "abington", "penn", "state"}
+            if len(t) > 2 and t.lower() not in {"major", "degree", "program", "nith", "hamirpur", "abington", "penn", "state"}
         ]
         return tokens or [major.strip().lower()]
 
@@ -2217,7 +2224,7 @@ def validate_final_response(
         if disallowed:
             issues.append("disallowed_tool_usage")
 
-    # Semantic hallucination guard: if the response claims Penn State-specific
+    # Semantic hallucination guard: if the response claims NIT Hamirpur-specific
     # specificity (course codes) but the executor reported zero tools used, the
     # model almost certainly invented those codes from pre-training. Trigger a
     # retry so the executor can re-run with grounded retrieval.
@@ -2377,16 +2384,16 @@ def run_finalizer_stage(
         "5. Decide whether one specific clarifying question is needed.\n\n"
         "Required response shape inside final_response:\n"
         "1. Direct answer first, in a warm and encouraging advisor voice.\n"
-        "   Example: 'Here is a standard Computer Science plan based on the available Abington data.'\n"
+        "   Example: 'Here is a standard Computer Science and Engineering plan based on the official NIT Hamirpur curriculum.'\n"
         "2. If the draft contains a semester plan, keep each semester block readable:\n"
         "   Example shape:\n"
         "   Semester 1:\n"
-        "   CMPSC 131: Programming and Computation I (prerequisites: None)\n"
-        "   MATH 140: Calculus I (prerequisites: None)\n"
-        "   Total Credits: 15\n"
+        "   CS-111: Computing and Problem Solving (prerequisites: None)\n"
+        "   MA-111: Engineering Mathematics I (prerequisites: None)\n"
+        "   Total Credits: 20\n"
         "3. Add 'Things to consider next:' with 3-5 short bullets when grounded details are available.\n"
-        "   Example bullets: '- Confirm placement requirements before registering for MATH 140.' "
-        "'- Meet with your advisor if a gen-ed bucket needs approval.'\n"
+        "   Example bullets: '- Review prerequisites before end-semester exam registration.' "
+        "'- Meet with your faculty advisor for elective selections.'\n"
         "4. Closing line: ask ONE specific clarifying question only when missing information would materially "
         "change the answer; otherwise use a short forward-looking nudge.\n"
         "   Example clarifying question: 'What semester are you planning for next?'\n\n"
@@ -2397,7 +2404,7 @@ def run_finalizer_stage(
         "- Do not introduce course codes, deadlines, policies, offices, or degree requirements that are not "
         "in the draft or recent context.\n"
         "- Do not change answer scope. Example: if the draft has one semester, do not add semesters 2-8.\n"
-        "- INLINE PREREQUISITE RULE (semester blocks): every Penn State course code inside a 'Semester N:' "
+        "- INLINE PREREQUISITE RULE (semester blocks): every course code inside a 'Semester N:' "
         "block MUST be immediately followed by '(prerequisites: <list>)' or '(prerequisites: None)'. Pull "
         "the list from the draft.\n"
         "- Prose prerequisite rule: outside semester blocks, prerequisite annotations are optional. Include "

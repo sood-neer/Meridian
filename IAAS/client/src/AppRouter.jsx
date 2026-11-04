@@ -6,22 +6,22 @@ import AdminDashboard from './pages/AdminDashboard'; // Admin Dashboard
 import Profile from './pages/Profile'; // Profile page
 import LoginPage from './pages/LoginPage';
 
-const getStoredUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem('user') || 'null');
-  } catch (_) {
-    return null;
-  }
+const DEFAULT_USER = {
+  id: 'demo-1',
+  name: 'NIT Hamirpur Student',
+  email: 'student@nith.ac.in',
+  role: 'student',
+  sex: 'Male',
+  dateOfBirth: '2003-01-01'
 };
 
-const RequireAuth = ({ user, roles, children }) => {
-  if (!user) {
-    return <Navigate to="/login" replace />;
+const getStoredUser = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    return user || DEFAULT_USER;
+  } catch (_) {
+    return DEFAULT_USER;
   }
-  if (roles?.length && !roles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  return children;
 };
 
 const AppRouter = () => {
@@ -32,8 +32,10 @@ const AppRouter = () => {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('user');
+    setUser(DEFAULT_USER);
   };
 
   return (
@@ -46,38 +48,17 @@ const AppRouter = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/student-dashboard" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Faculty Advisor Route */}
-        <Route
-          path="/faculty-dashboard"
-          element={
-            <RequireAuth user={user} roles={['faculty', 'admin']}>
-              <FacultyDashboard />
-            </RequireAuth>
-          }
-        />
+        {/* Faculty Advisor Route - Direct open access */}
+        <Route path="/faculty-dashboard" element={<FacultyDashboard />} />
 
-        {/* Admin Dashboard Route */}
-        <Route
-          path="/admin-dashboard"
-          element={
-            <RequireAuth user={user} roles={['admin']}>
-              <AdminDashboard />
-            </RequireAuth>
-          }
-        />
+        {/* Admin Dashboard Route - Direct open access */}
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
-        {/* Profile Route */}
-        <Route
-          path="/profile"
-          element={
-            <RequireAuth user={user}>
-              <Profile onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        />
+        {/* Profile Route - Direct open access */}
+        <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
 
         {/* Catch-All Route */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

@@ -1,0 +1,223 @@
+course_number,course_name,description,prerequisite_data,prerequisite_course_numbers,learning_objectives,department_url
+MA-111,"Linear Algebra & Calculus
+
+3 Credits","Matrices, eigenvalues and eigenvectors, Cayley-Hamilton Theorem, diagonalization. Calculus of single and multivariable functions, Taylor series, maxima and minima, multiple integrals, vector calculus, Green's and Stokes' theorems. Syllabus source: National Institute of Technology Hamirpur bachelor-course-structure-syllabus.",None,[],"['Understand matrix algebra and eigenvalue problems', 'Apply multivariable calculus and multiple integrals to engineering']",https://nith.ac.in/bachelor-course-structure-syllabus
+PH-101,"Engineering Physics
+
+3 Credits","Oscillations, waves, interference, diffraction, polarization, lasers and optical fibers, quantum mechanics, wave-particle duality, Schrodinger equation, solid state physics, semiconductor devices. Syllabus from NIT Hamirpur B.Tech First Year curriculum.",None,[],"['Grasp wave optics and quantum mechanics principles', 'Understand laser and semiconductor physics']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-111,"Introduction to Computer and C Programming
+
+3 Credits","Fundamentals of computers, algorithm and flowchart development. C programming syntax, data types, operators, control flow, functions, recursion, arrays, pointers, strings, structures, unions, dynamic memory allocation and file handling. NIT Hamirpur Department of Computer Science & Engineering syllabus.",None,[],"['Develop problem-solving algorithms', 'Write robust structured programs in C using pointers and memory management']",https://nith.ac.in/bachelor-course-structure-syllabus
+ME-101,"Basics of Mechanical Engineering
+
+3 Credits","Laws of thermodynamics, thermodynamic cycles, power plants, internal combustion engines, heat transfer mechanisms, basic manufacturing processes, casting, welding, machining, and engineering materials.",None,[],"['Understand thermodynamic laws and energy conversion', 'Appreciate mechanical systems and manufacturing principles']",https://nith.ac.in/bachelor-course-structure-syllabus
+HS-101,"Communication Skills
+
+2 Credits","LSRW skills (Listening, Speaking, Reading, Writing), technical writing, report drafting, business correspondence, presentation techniques, public speaking, non-verbal communication and vocabulary enhancement.",None,[],"['Master professional technical communication', 'Enhance presentation and interpersonal skills']",https://nith.ac.in/bachelor-course-structure-syllabus
+HS-103,"Human Values and Ethical Mindfulness
+
+2 Credits","Personal and professional ethics, moral values, emotional intelligence, mindfulness, environmental ethics, ethical decision making in engineering practice, ISO 14000, and corporate social responsibility.",None,[],"['Inculcate human values and mindfulness in engineering', 'Resolve ethical dilemmas in professional life']",https://nith.ac.in/bachelor-course-structure-syllabus
+PH-102,"Physics Lab
+
+1 Credit","Experimental verification of optical phenomena (Newton's rings, diffraction grating, spectrometer), Hall effect, bandgap determination, laser wavelength measurement, and harmonic oscillations.",None,[],"['Conduct precision physical measurements', 'Analyze experimental errors in optical and semiconductor experiments']",https://nith.ac.in/bachelor-course-structure-syllabus
+HS-102,"Communication Skills Lab
+
+1 Credit","Language laboratory sessions focusing on phonetics, pronunciation, group discussions, mock interviews, impromptu speeches, and listening comprehension.",None,[],"['Improve spoken English fluency and accent', 'Excel in group discussions and interview settings']",https://nith.ac.in/bachelor-course-structure-syllabus
+ME-102,"Engineering Workshop Practice
+
+2 Credits","Hands-on training in carpentry, fitting, sheet metal, welding, machining, and foundry shops. Safety regulations and use of machine tools.",None,[],"['Acquire practical fabrication skills', 'Operate machine tools safely']",https://nith.ac.in/bachelor-course-structure-syllabus
+CE-101,"Engineering Graphics
+
+2 Credits","Principles of engineering drawing, lettering, orthographic projections of points, lines, planes, and solids. Section of solids, isometric views, and introductory computer-aided drafting (CAD).",None,[],"['Interpret engineering blueprints and drawings', 'Use CAD tools for 2D drafting']",https://nith.ac.in/bachelor-course-structure-syllabus
+MA-121,"Differential Equations
+
+3 Credits","First-order ODEs, higher-order linear ODEs with constant coefficients, Laplace transforms, Fourier series, boundary value problems, partial differential equations (heat, wave, Laplace equations).",MA-111,['MA-111'],"['Solve engineering ODEs and PDEs', 'Apply Laplace transforms to dynamic systems']",https://nith.ac.in/bachelor-course-structure-syllabus
+CY-101,"Engineering Chemistry
+
+3 Credits","Molecular structure and theories of bonding, spectroscopy, thermodynamics of chemical processes, electrochemistry, corrosion and its prevention, polymers and composite materials, water technology and green chemistry.",None,[],"['Understand corrosion, polymers, and water treatment', 'Apply chemical thermodynamics to materials']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-121,"Introduction to Python and Data Structures
+
+3 Credits","Python programming syntax, collections (lists, tuples, dicts, sets), OOP in Python, numpy, pandas, and foundational data structures (stacks, queues, linked lists, binary trees, sorting and searching algorithms).",CS-111,['CS-111'],"['Develop Python applications and data pipelines', 'Implement linear and non-linear data structures']",https://nith.ac.in/bachelor-course-structure-syllabus
+EE-101,"Basic Electrical Engineering
+
+2 Credits","DC circuit analysis (KCL, KVL, Norton, Thevenin, Superposition), AC single phase and three phase circuits, resonance, transformers, DC machines, and induction motors.",None,[],"['Analyze DC and AC networks', 'Understand transformer and electric motor operations']",https://nith.ac.in/bachelor-course-structure-syllabus
+EC-101,"Basic Electronics Engineering
+
+2 Credits","Semiconductor physics, PN junction diodes, BJT, FET, MOSFET, operational amplifiers, inverting and non-inverting configurations, and digital logic gates.",None,[],"['Analyze diode and transistor circuits', 'Design basic op-amp circuits']",https://nith.ac.in/bachelor-course-structure-syllabus
+EN-101,"Energy Environment & Life Science
+
+2 Credits","Renewable and non-renewable energy resources, environmental pollution, climate change, ecosystem dynamics, sustainable development, and biological cell systems.",None,[],"['Assess renewable energy systems and environmental impact', 'Understand sustainable engineering practices']",https://nith.ac.in/bachelor-course-structure-syllabus
+MB-101,"Entrepreneurship & Marketing Dynamics
+
+1 Credit","Principles of entrepreneurship, startup ecosystems, business model canvas, market research, digital marketing fundamentals, and venture capital financing.",None,[],"['Understand entrepreneurial processes and ideation', 'Develop basic commercial business models']",https://nith.ac.in/bachelor-course-structure-syllabus
+CY-102,"Engineering Chemistry Lab
+
+1 Credit","Volumetric analysis, hardness of water determination, viscosity and surface tension measurement, conductometric and potentiometric titrations.",None,[],"['Conduct standard water and chemical quality tests', 'Perform instrumental chemical analyses']",https://nith.ac.in/bachelor-course-structure-syllabus
+EE-102,"Electrical & Electronics Engineering Lab
+
+1 Credit","Experimental verification of network theorems, diode characteristics, transistor biasing, op-amp configurations, logic gate operations, and transformer testing.",None,[],"['Build and test analog/digital circuits on breadboards', 'Verify transformer efficiency and machine characteristics']",https://nith.ac.in/bachelor-course-structure-syllabus
+MA-219,"Probability and Applied Statistics
+
+3 Credits","Probability distributions (Binomial, Poisson, Normal), random variables, expectations, sampling theory, hypothesis testing (t-test, chi-square test, F-test), regression, correlation, and Markov chains for computing.",MA-111,['MA-111'],"['Apply statistical methods and testing to computational problems', 'Model stochastic processes with probability distributions']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-212,"Discrete Structures
+
+3 Credits","Sets, relations, functions, propositional and predicate logic, proof methods, mathematical induction, recurrence relations, combinatorics, graph theory, trees, and algebraic structures (groups, rings, lattices).",None,[],"['Master mathematical reasoning and formal proofs', 'Analyze relations, recurrences, and graphs for computing']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-213,"Object Oriented Programming
+
+3 Credits","OOP paradigm in C++ and Java: classes, objects, data encapsulation, inheritance, polymorphism, abstract classes, interfaces, exception handling, templates, generic programming, and standard template library (STL).",CS-111,['CS-111'],"['Design modular object-oriented software architectures', 'Utilize templates, polymorphism, and exception safety']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-214,"Data Structures
+
+3 Credits","Asymptotic analysis of algorithms. Linear data structures: stacks, queues, linked lists. Non-linear data structures: trees, BST, AVL trees, B/B+ trees, heaps, graphs, hashing, sorting techniques and graph traversals (BFS, DFS).",CS-111,['CS-111'],"['Implement complex data structures and balanced search trees', 'Analyze algorithmic time and space complexities']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-215,"Computer Graphics
+
+3 Credits","Display devices, raster scan systems, line and circle drawing algorithms, 2D and 3D transformations, window-to-viewport mapping, clipping algorithms, 3D projections, hidden surface elimination, shading models, and OpenGL programming.",CS-111,['CS-111'],"['Understand 2D/3D graphics rendering pipelines', 'Implement geometric transformations and clipping in OpenGL']",https://nith.ac.in/bachelor-course-structure-syllabus
+EC-219,"Digital Electronics
+
+2 Credits","Number systems, Boolean algebra, logic minimization (K-maps), combinational logic circuits (adders, multiplexers, decoders), sequential circuits, flip-flops, registers, counters, finite state machines, and semiconductor memories.",EC-101,['EC-101'],"['Design combinational and sequential digital systems', 'Synthesize synchronous and asynchronous state machines']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-217,"Object Oriented Programming Lab
+
+1 Credit","Practical implementation of OOP concepts in C++/Java: classes, multiple inheritance, operator overloading, virtual functions, file I/O, templates, and GUI programming.",CS-213,['CS-213'],"['Implement production-quality OOP code', 'Build robust modular applications with unit tests']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-218,"Data Structures Lab
+
+1 Credit","Hands-on programming of linked lists, stacks, queues, expression evaluation, BST operations, AVL rotations, graph algorithms (Dijkstra, Kruskal, Prim), and sorting comparisons.",CS-214,['CS-214'],"['Write clean, efficient C/C++ implementations of data structures', 'Profile algorithm running times experimentally']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-219,"Computational Tools and Workshop
+
+1 Credit","Linux command line, shell scripting, Git version control, Docker containerization, LaTeX documentation, and build automation tools (Makefile, CMake).",None,[],"['Master developer tooling, Linux environments, and Git', 'Automate builds and containerize applications']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-221,"Microprocessor & Interfacing
+
+3 Credits","8085 and 8086 microprocessor architectures, addressing modes, assembly language programming, interrupt handling, interfacing chips (8255 PPI, 8254 timer, 8259 PIC, 8251 UART), memory and I/O interfacing.",EC-219,['EC-219'],"['Write 8086 assembly language programs', 'Interface memory and peripheral devices to microprocessors']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-222,"Operating Systems
+
+4 Credits","OS architecture, process management, CPU scheduling, inter-process communication (IPC), synchronization (semaphores, monitors), deadlocks, memory management, virtual memory, paging, segmentation, file systems, disk scheduling, and Linux kernel fundamentals.",CS-214,['CS-214'],"['Understand process scheduling, concurrency, and synchronization', 'Analyze memory management, paging, and file system implementations']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-223,"Computer Organization and Architecture
+
+3 Credits","Von Neumann architecture, register transfer logic, arithmetic logic unit (ALU), computer arithmetic (Booth algorithm), hardwired and microprogrammed control units, pipelining, hazards, memory hierarchy (cache memory, virtual memory), and multiprocessor systems.",EC-219,['EC-219'],"['Design basic processor data paths and control units', 'Optimize cache memory and instruction pipelining performance']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-224,"Theory of Computation
+
+3 Credits","Automata theory, regular expressions, deterministic and non-deterministic finite automata (DFA/NFA), pumping lemma for regular languages, context-free grammars (CFG), pushdown automata (PDA), Turing machines, Church-Turing thesis, decidability, and NP-completeness.",CS-212,['CS-212'],"['Design finite automata, PDAs, and Turing machines', 'Prove language decidability and undecidability']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-241,"Data Communication
+
+3 Credits","Data transmission fundamentals, signals, modulation (ASK, FSK, PSK, QAM), transmission media, multiplexing (TDM, FDM), error detection and correction (CRC, Hamming codes), data link control protocols, and switching techniques.",None,[],"['Understand digital communication signals and encoding', 'Implement error control and flow control mechanisms']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-242,"Optimization Techniques
+
+3 Credits","Linear programming, simplex method, duality, transportation and assignment problems, non-linear programming, integer programming, gradient descent, genetic algorithms, and convex optimization.",MA-111,['MA-111'],"['Formulate optimization problems mathematically', 'Solve linear and non-linear optimization programs']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-243,"Simulation & Modelling
+
+3 Credits","System simulation concepts, discrete-event simulation, random number generation, input modeling, verification and validation of simulation models, output analysis, and queuing systems.",MA-219,['MA-219'],"['Construct discrete-event simulation models', 'Validate stochastic simulation experiments statistically']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-225,"Microprocessor & Interfacing Lab
+
+1 Credit","Assembly language programming for 8085/8086 microprocessors, peripheral interfacing with 8255, 8254, stepper motor control, ADC/DAC conversions, and traffic light controllers.",CS-221,['CS-221'],"['Write and debug 8086 assembly routines', 'Control hardware peripherals via microprocessor boards']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-226,"Operating System Lab
+
+1 Credit","Linux system calls, process creation using fork and exec, multithreading with POSIX pthreads, synchronization using mutex and semaphores, memory mapping, and writing shell scripts.",CS-222,['CS-222'],"['Program Linux system calls for IPC and concurrency', 'Implement process synchronization with semaphores']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-227,"Computer Organization & Architecture Lab
+
+1 Credit","Design and simulation of digital components using VHDL/Verilog: ALU design, register files, Booth multiplier, datapath design, cache simulation, and pipeline hazard analysis.",CS-223,['CS-223'],"['Model computer hardware modules in Verilog/VHDL', 'Simulate instruction execution cycles and cache hits/misses']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-311,"Analysis & Design of Algorithms
+
+3 Credits","Algorithm design paradigms: divide-and-conquer, greedy method, dynamic programming, backtracking, branch-and-bound. String matching algorithms (KMP, Rabin-Karp), max-flow min-cut, randomized algorithms, NP-completeness, and approximation algorithms.",CS-214,['CS-214'],"['Synthesize optimal algorithms using dynamic programming and greedy strategies', 'Formulate NP-complete reductions']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-312,"Compiler Design
+
+3 Credits","Phases of compiler, lexical analysis (Lex/Flex), syntax analysis (top-down and bottom-up parsing, LL, LR, LALR parsers, Yacc/Bison), syntax-directed translation, intermediate code generation (three-address code), code optimization, and target code generation.",CS-224,['CS-224'],"['Build lexical analyzers and parsers using compiler generation tools', 'Generate and optimize intermediate code representations']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-313,"Computer Networks
+
+3 Credits","OSI and TCP/IP protocol stacks. Physical layer, Data Link layer (Ethernet, CSMA/CD, flow control), Network layer (IPv4, IPv6, routing protocols: OSPF, BGP, RIP, subnetting), Transport layer (TCP, UDP, congestion control), and Application layer (DNS, HTTP, SMTP, FTP). Socket programming.",CS-241,['CS-241'],"['Master network routing, addressing, and congestion control', 'Develop network client-server programs with socket APIs']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-314,"Artificial Intelligence
+
+3 Credits","Intelligent agents, problem-solving state spaces, uninformed and heuristic search (A*, IDA*, minimax, alpha-beta pruning), constraint satisfaction problems (CSP), knowledge representation, first-order logic, resolution, planning, probabilistic reasoning, Bayesian networks, and expert systems.",CS-214,['CS-214'],"['Implement heuristic search algorithms and game-playing agents', 'Construct Bayesian belief networks and probabilistic inference engines']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-351,"Advance Operating System
+
+3 Credits","Distributed operating systems, synchronization in distributed systems (Lamport clocks, mutual exclusion), distributed deadlocks, distributed shared memory, load balancing, real-time operating systems, and fault tolerance.",CS-222,['CS-222'],"['Design distributed synchronization and memory algorithms', 'Evaluate real-time scheduling mechanisms']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-301,"Data Structures (Open Elective)
+
+3 Credits","Open elective covering linear and non-linear data structures, searching, sorting, hashing, trees, and graphs for non-CSE engineering students.",CS-111,['CS-111'],['Apply fundamental data structures to diverse engineering disciplines'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-315,"Compiler Design Lab
+
+1 Credit","Implementation of scanner/lexer using Lex/Flex, parser implementation using Yacc/Bison, syntax trees, symbol table management, and code generation.",CS-312,['CS-312'],['Construct working compiler front-ends with Lex and Yacc'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-316,"Computer Networks Lab
+
+1 Credit","Network simulation in NS2/NS3/Wireshark, socket programming in C/Python (TCP echo, UDP chat, HTTP client), subnetting design, and router configuration.",CS-313,['CS-313'],"['Packet capture analysis in Wireshark', 'Develop networked client-server applications']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-321,"Digital Image Processing
+
+3 Credits","Image representation, intensity transformations, spatial filtering, histogram equalization, Fourier transform of 2D signals, frequency domain filtering, image restoration, color image processing, wavelets, image compression (JPEG), morphological operations, and edge detection.",CS-214,['CS-214'],"['Apply spatial and frequency domain image enhancements', 'Implement segmentation and morphological image analysis in Python/OpenCV']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-322,"Database Management Systems
+
+3 Credits","Database system concepts, relational data model, relational algebra, SQL, integrity constraints, ER modeling, normal forms (1NF, 2NF, 3NF, BCNF, 4NF), query processing and optimization, transaction management, ACID properties, concurrency control (locking, 2PL, timestamping), recovery systems, and NoSQL databases.",CS-214,['CS-214'],"['Design normalized relational schemas and write complex SQL queries', 'Understand transaction concurrency control, locking, and recovery']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-323,"Software Engineering
+
+2 Credits","Software development life cycle (SDLC) models (Waterfall, Agile, Scrum), requirements engineering, software architecture design, UML modeling, software testing strategies (white-box, black-box, regression testing), metrics, maintenance, and DevOps practices.",CS-213,['CS-213'],"['Lead agile software development lifecycles and sprint planning', 'Apply comprehensive unit, integration, and system testing methods']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-341,"Game Theory
+
+3 Credits","Strategic games, Nash equilibrium, mixed strategies, extensive games with perfect/imperfect information, repeated games, bargaining theory, and mechanism design.",MA-219,['MA-219'],"['Compute Nash equilibria in strategic scenarios', 'Apply mechanism design to distributed computational systems']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-342,"Computer Vision
+
+3 Credits","Feature detection and matching (SIFT, SURF, ORB), camera calibration, stereo vision, motion estimation, optical flow, object detection (YOLO, R-CNN), and deep convolutional networks.",CS-321,['CS-321'],"['Implement 3D scene reconstruction and feature tracking', 'Train object detection models using deep learning']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-343,"Natural Language Processing
+
+3 Credits","Text preprocessing, N-gram models, part-of-speech tagging (HMM), word embeddings (Word2Vec, GloVe), sequence models (RNN, LSTM), Transformers, self-attention, BERT, and large language model architectures.",CS-314,['CS-314'],"['Build statistical and neural NLP pipelines', 'Fine-tune transformer models for text classification and generation']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-361,"Cloud Computing
+
+3 Credits","Cloud service models (IaaS, PaaS, SaaS), virtualization (KVM, Docker, Kubernetes), cloud storage architectures, distributed file systems, serverless computing, and cloud security.",CS-222,['CS-222'],"['Architect scalable microservices on cloud infrastructure', 'Deploy and manage containerized clusters with Kubernetes']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-381,"Distributed Systems
+
+2 Credits","Characterization of distributed systems, RPC, RMI, distributed consensus (Paxos, Raft), peer-to-peer systems, distributed transaction protocols, and fault tolerance.",CS-222,['CS-222'],"['Implement distributed consensus and fault-tolerant protocols', 'Build resilient peer-to-peer distributed applications']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-382,"Machine Learning
+
+2 Credits","Supervised learning: linear regression, logistic regression, SVM, decision trees, random forests, naive Bayes. Unsupervised learning: k-means, hierarchical clustering, PCA. Ensemble methods, model evaluation metrics, regularization (L1/L2), and introduction to deep learning.",MA-219,['MA-219'],"['Train, validate, and evaluate predictive statistical models', 'Implement clustering, dimensionality reduction, and ensemble pipelines']",https://nith.ac.in/bachelor-course-structure-syllabus
+HS-321,"Engineering Economics and Accountancy
+
+2 Credits","Demand and supply analysis, cost concepts, elasticity, break-even analysis, financial statements (balance sheet, profit & loss), depreciation methods, discounted cash flow techniques (NPV, IRR), and economic appraisal of engineering projects.",None,[],"['Conduct engineering cost estimations and project feasibility studies', 'Interpret financial accounting statements and appraisal metrics']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-324,"Digital Image Processing Lab
+
+1 Credit","Image enhancement, edge detection, filtering, frequency domain transforms, and morphological operations implemented in Python using OpenCV, NumPy, and Scikit-Image.",CS-321,['CS-321'],['Implement computer vision and image processing algorithms with OpenCV'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-325,"Database Management Systems Lab
+
+1 Credit","Database design and normalization, DDL/DML SQL queries, triggers, stored procedures, transactions, and backend database integration with web applications using PostgreSQL / MySQL.",CS-322,['CS-322'],['Design relational databases and write optimized SQL queries and stored procedures'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-411,"Advance Computer Architecture
+
+3 Credits","Instruction level parallelism, superscalar architectures, dynamic branch prediction, speculative execution, out-of-order execution, VLIW, multi-core processors, memory hierarchy design, cache coherence protocols (MESI), snooping vs directory-based schemes, and interconnection networks.",CS-223,['CS-223'],"['Analyze modern superscalar and speculative execution microarchitectures', 'Design cache coherent symmetric and distributed multiprocessors']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-412,"Information Security & Privacy
+
+3 Credits","Cryptographic fundamentals: symmetric key ciphers (DES, AES), public key cryptography (RSA, ECC), cryptographic hash functions (SHA-2/3), digital signatures, authentication protocols (Kerberos), network security (IPSec, SSL/TLS), firewalls, intrusion detection, privacy preserving data mining, and GDPR principles.",CS-313,['CS-313'],"['Implement cryptographic algorithms and secure protocols', 'Audit systems for vulnerabilities and configure intrusion prevention']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-413,"Data Warehousing & Data Mining
+
+3 Credits","Data warehouse architectures, dimensional modeling, star and snowflake schemas, OLAP operations. Data preprocessing, frequent pattern mining (Apriori, FP-Growth), advanced classification, cluster analysis, outlier detection, and big data analytical frameworks.",CS-322,['CS-322'],"['Design dimensional data warehouse models and ETL workflows', 'Extract hidden patterns using association and clustering algorithms']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-431,"Information Theory and Coding
+
+3 Credits","Entropy, mutual information, channel capacity, Shannon's theorems, source coding (Huffman, Shannon-Fano, arithmetic coding), error-correcting codes (linear block codes, cyclic codes, BCH, Reed-Solomon codes, convolutional codes).",MA-219,['MA-219'],"['Quantify information content and channel capacity mathematically', 'Design error-detecting and error-correcting block codes']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-432,"Soft Computing
+
+3 Credits","Fuzzy logic, fuzzy sets, fuzzy reasoning and control systems, artificial neural networks (feedforward, backpropagation, radial basis functions), genetic algorithms (crossover, mutation, fitness landscapes), and hybrid neuro-fuzzy systems.",CS-314,['CS-314'],"['Develop neuro-fuzzy decision systems', 'Implement evolutionary algorithms for complex search spaces']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-433,"Big Data Analytics
+
+3 Credits","Hadoop ecosystem (HDFS, MapReduce, YARN), Apache Spark (RDD, DataFrames, Spark SQL, MLlib), distributed stream processing (Kafka, Spark Streaming), NoSQL databases (Cassandra, MongoDB), and large-scale graph analytics.",CS-322,['CS-322'],"['Build distributed data processing pipelines using Spark and Hadoop', 'Perform high-throughput streaming analytics with Kafka']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-452,"Deep Learning
+
+2 Credits","Deep feedforward networks, convolutional neural networks (CNNs), recurrent neural networks (RNNs, LSTMs, GRUs), autoencoders, generative adversarial networks (GANs), diffusion models, attention mechanisms, and PyTorch frameworks.",CS-382,['CS-382'],"['Train deep neural networks using GPU acceleration and PyTorch', 'Design modern generative models and vision/language architectures']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-471,"Internet of Things
+
+2 Credits","IoT architectures, sensors, actuators, embedded systems (Arduino, Raspberry Pi, ESP32), wireless communication protocols (MQTT, CoAP, ZigBee, LoRaWAN), cloud IoT platforms, edge computing, and IoT security.",CS-313,['CS-313'],"['Design end-to-end IoT sensor nodes and embedded controllers', 'Implement edge analytics and secure device communications']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-414,"Information Security and Privacy Lab
+
+1 Credit","Practical implementation of cryptographic ciphers (AES, RSA, ECC), digital certificates, vulnerability scanning with Nessus/OpenVAS, packet sniffing, penetration testing, and firewall rules configuration.",CS-412,['CS-412'],['Perform security vulnerability assessments and cryptography routines'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-415,"Data Warehousing & Data Mining Lab
+
+1 Credit","Hands-on data warehouse design, ETL modeling, implementation of association rule mining (Apriori), decision trees, k-means clustering in Python using Scikit-Learn and Pandas.",CS-413,['CS-413'],['Execute end-to-end data mining and ETL pipelines'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-416,"Summer Training / Vocational Training
+
+2 Credits","Mandatory industrial or institutional training completed by students after the 6th semester. Evaluated on the basis of a comprehensive written report, employer/supervisor feedback, and viva voce presentation.",Completion of 6th semester core curriculum,[],"['Gain industrial software engineering experience', 'Present findings and technical contributions professionally']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-461,"Reinforcement Learning
+
+3 Credits","Markov decision processes (MDP), dynamic programming, Monte Carlo methods, temporal difference learning, Q-learning, SARSA, deep Q-networks (DQN), policy gradient methods, and actor-critic architectures.",CS-382,['CS-382'],"['Formulate decision-making tasks as MDPs', 'Implement deep reinforcement learning agents in simulated environments']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-462,"Cyber Security
+
+3 Credits","Threat modeling, offensive and defensive cyber tactics, secure coding standards (OWASP Top 10), malware analysis, web security, reverse engineering, security operations center (SOC) fundamentals, and incident response.",CS-412,['CS-412'],"['Audit application source code for OWASP security flaws', 'Execute digital forensics and security incident response']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-481,"Blockchain Technology
+
+3 Credits","Distributed ledgers, cryptographic hashes, consensus algorithms (Proof of Work, Proof of Stake), Bitcoin, Ethereum, smart contracts in Solidity, decentralized applications (DApps), and permissioned blockchains (Hyperledger).",CS-313,['CS-313'],"['Design and deploy Solidity smart contracts on Ethereum testnets', 'Analyze decentralized consensus protocols and cryptographic ledgers']",https://nith.ac.in/bachelor-course-structure-syllabus
+CS-498,"Holistic Assessment & General Proficiency
+
+2 Credits","Comprehensive evaluation of student professional skills, extracurricular achievements, participation in technical clubs, ethical conduct, and overall academic performance across 8 semesters at NIT Hamirpur.",Final semester standing,[],['Demonstrate holistic professional competencies and graduate attributes'],https://nith.ac.in/bachelor-course-structure-syllabus
+CS-499,"UG Project
+
+12 Credits","Capstone major project for final year B.Tech Computer Science and Engineering students at NIT Hamirpur. Involves formulation of research or engineering problem, literature review, software/hardware architecture design, implementation, testing, project documentation, and defense viva voce before an evaluation panel.",All core courses through 6th semester,[],"['Execute an end-to-end engineering capstone design', 'Publish technical documentation and defend thesis findings']",https://nith.ac.in/bachelor-course-structure-syllabus

@@ -72,9 +72,9 @@ fi
 echo "✅ LLM directory found"
 
 # Check if the CSV file exists
-if [ ! -f "../LLMAcadamic-Advisor/LLM/all_abington_majors_combined(5).csv" ]; then
+if [ ! -f "../LLMAcadamic-Advisor/LLM/nith_majors.csv" ] && [ ! -f "../LLMAcadamic-Advisor/LLM/all_abington_majors_combined(5).csv" ]; then
     echo "❌ Error: Required CSV file not found"
-    echo "   Expected: ../LLMAcadamic-Advisor/LLM/all_abington_majors_combined(5).csv"
+    echo "   Expected: ../LLMAcadamic-Advisor/LLM/nith_majors.csv"
     exit 1
 fi
 

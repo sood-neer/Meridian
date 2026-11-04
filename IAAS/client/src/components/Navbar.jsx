@@ -6,13 +6,15 @@ const Navbar = ({ user, onLogout }) => {
   const navigate = useNavigate();
 
   const handleDashboardNavigation = () => {
-    // Navigate to the correct dashboard based on user role
-    if (user.role === 'student') {
+    const role = user?.role || 'student';
+    if (role === 'student') {
       navigate('/dashboard');
-    } else if (user.role === 'faculty') {
+    } else if (role === 'faculty') {
       navigate('/faculty-dashboard');
-    } else if (user.role === 'admin') {
+    } else if (role === 'admin') {
       navigate('/admin-dashboard');
+    } else {
+      navigate('/dashboard');
     }
   };
 

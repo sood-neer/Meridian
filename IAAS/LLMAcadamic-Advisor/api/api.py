@@ -1,6 +1,12 @@
 
 import sys
 import os
+
+# Optimize performance and suppress noisy telemetry & cache warnings
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+os.environ.setdefault("CHROMA_TELEMETRY", "False")
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+
 import io
 import logging
 import hashlib
@@ -449,7 +455,11 @@ def generate_major_graph():
             return jsonify({"error": "Major name is required"}), 400
 
         # Initialize MajorGraph with the CSV file path
-        csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'all_abington_majors_combined(5).csv')
+        csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'nith_majors.csv')
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'nith_majors.csv')
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'all_abington_majors_combined(5).csv')
         
         # Check if CSV file exists
         if not os.path.exists(csv_path):
@@ -483,7 +493,9 @@ def generate_major_graph():
 @app.route('/llm/clear-major-graph-cache', methods=['POST'])
 def clear_major_graph_cache():
     try:
-        csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'all_abington_majors_combined(5).csv')
+        csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'nith_majors.csv')
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(os.path.dirname(__file__), '..', 'LLM', 'all_abington_majors_combined(5).csv')
         if not os.path.exists(csv_path):
             return jsonify({"error": f"CSV file not found at: {csv_path}"}), 500
         mg = MajorGraph(csv_path)

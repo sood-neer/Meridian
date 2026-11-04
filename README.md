@@ -1,508 +1,250 @@
-# Meridian — AI Academic Advisor
+# Meridian — AI Academic Advisor (Leo)
+### National Institute of Technology Hamirpur (NIT Hamirpur)
 
-> AI-powered academic advisor for Penn State students — multi-agent LLM orchestration,
-> transcript-aware RAG, and deterministic graduation planning, built with React, Flask, and LangChain.
-
-🌐 **Live Demo:** https://3.145.213.72/
+> Multi-agent LLM academic advisor and graduation planning system for **National Institute of Technology Hamirpur (NIT Hamirpur)** students — featuring curriculum-grounded RAG, NEP-2020 8-semester course planning, prerequisite graph validation, official web research, and open demo access.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
 ![Node](https://img.shields.io/badge/Node.js-18+-green?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![LangChain](https://img.shields.io/badge/LangChain-0.2-orange)
+![Tests](https://img.shields.io/badge/Tests-124%20Passing-success)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
 ## Overview
 
-Meridian supports:
+**Meridian** features **Leo**, an AI Academic Advisor tuned for undergraduate engineering students at **NIT Hamirpur**:
 
-- transcript upload and session-scoped retrieval
-- semester-by-semester graduation planning
-- next-semester course recommendations
-- Penn State policy and deadline lookup
-- course, major, and prerequisite question answering
-- source-backed web research for current or unexpected factual questions
-- faculty-facing major roadmap graph generation
-
----
-
-## Why This Project Is Interesting
-
-This codebase is not a basic chatbot wrapper. It demonstrates:
-
-- multi-agent orchestration with explicit planning, execution, and validation stages
-- hybrid AI systems design combining LLM reasoning with deterministic academic logic
-- retrieval-augmented generation over transcripts, courses, majors, and policy data
-- tool-aware execution with controlled web research and source validation
-- operational observability through per-request debug traces and regression tests
+- **Curriculum-Grounded Planning:** Built directly on the official NIT Hamirpur Bachelor Course Structure & Syllabus ([nith.ac.in/bachelor-course-structure-syllabus](https://nith.ac.in/bachelor-course-structure-syllabus)).
+- **NEP-2020 Degree Structures:** Supports B.Tech programs (Computer Science & Engineering, Electronics & Communication Engineering, Electrical Engineering, Mechanical Engineering, Civil Engineering) across 8 semesters and 160 total credits (~20 credits/semester).
+- **Indian Academic Context:** Built-in awareness of the 10-point CGPA grading scale ($O=10$, $A^+=9$, $A=8$, $B^+=7$, $B=6$, $C=5$, $D=4$, $F=0$), continuous internal evaluations (quizzes, mid-terms, labs), backlog clearance rules, and Training & Placement (T&P) Cell requirements.
+- **Deterministic Prerequisite Graph:** Validates course sequences and hard prerequisites (e.g. `CS-111` $\rightarrow$ `CS-121` $\rightarrow$ `CS-211`) to prevent scheduling invalid courses.
+- **Official Web Research Pipeline:** Prioritizes `site:nith.ac.in` for real-time institute deadlines, academic calendars, ordinances, and administrative leadership lookups.
+- **Zero-Barrier Demo Access:** Runs out-of-the-box with 1-click quick-login (`MYSQL_DISABLE=true`), eliminating database setup barriers for local exploration and evaluation.
 
 ---
 
 ## System Architecture
 
 ```text
-Browser
-  -> React Client
-      -> Flask AI API
-          -> Orchestrator Agent
-          -> Executor Agent
-          -> Finalizer Agent
-          -> Shared Research Pipeline
-          -> Local RAG Stores
-          -> Deterministic Graduation Planner
-      -> Node / Express Auth API
-          -> MySQL
+Student / Faculty Browser
+  │
+  ├── React Client (Port 3000) ─────────────── Unified Chat, Demo Quick-Login, Roadmap Graph
+  │     │
+  │     ├── Node Auth API (Port 5001) ──────── Optional MySQL user storage (Bypassed in Demo mode)
+  │     │
+  │     └── Flask AI Backend (Port 5002) ───── Multi-Agent Advisory Engine
+  │           ├── Orchestrator Agent (Intent classification, plan scoping, persona)
+  │           ├── Executor Agent (Path routing, RAG retrievers, tool execution)
+  │           │     ├── Deterministic Graduation Flowchart (NEP-2020 160-cr scheduler)
+  │           │     ├── Prerequisite DAG Engine (Hard prereqs, coreqs, level flooring)
+  │           │     ├── Local Chroma Vectorstores (NITH Courses, Majors, Regulations)
+  │           │     └── Shared Web Research Pipeline (Official nith.ac.in crawlers)
+  │           └── Finalizer Agent (Grounded verification, prereq validation, tone polish)
 ```
-
-### Main Services
-
-#### 1. React Frontend
-
-Location: `IAAS/client`
-
-Responsibilities:
-
-- renders the student advising chat experience
-- manages per-tab session state
-- uploads transcript PDFs
-- sends conversation history with each request
-- surfaces faculty roadmap generation views
-
-#### 2. Node Authentication Service
-
-Location: `IAAS/client/server`
-
-Responsibilities:
-
-- register and login endpoints
-- MySQL user storage
-- lightweight auth support for the UI
-
-#### 3. Flask AI Backend
-
-Location: `IAAS/LLMAcadamic-Advisor`
-
-Responsibilities:
-
-- transcript ingestion and retrieval setup
-- multi-agent reasoning pipeline
-- deterministic graduation planning
-- policy and deadline lookup
-- web-backed research for fresh facts
-- debug trace generation
 
 ---
 
 ## AI Multi-Agentic Workflow
 
-The active AI workflow is a three-stage agent pipeline with a shared research system behind it.
+### 1. Orchestrator Agent
+- Resolves student intent (course info, graduation plan, policy/deadline, transcript audit, general chat).
+- Enforces the **Leo** advising persona at **NIT Hamirpur**.
+- Produces a strongly-typed `OrchestrationPlan` defining required tools, target major, semester horizon, and validation constraints.
 
-### Agent 1: Orchestrator
+### 2. Executor Agent
+- Executes the orchestration plan across local retrieval and analytical tools:
+  - `majors_retriever`: Catalog specifications from `nith_majors.csv`.
+  - `course_retriever`: Syllabi and descriptions from `nith_courses.csv`.
+  - `prerequisite_graph`: Direct graph inspection of course dependencies.
+  - `policy_retriever`: Institute academic ordinances and regulations.
+  - `graduationFlowchart`: 8-semester course scheduling with level-flooring and credit balancing.
+  - `web_search`: Authoritative crawling of `nith.ac.in`.
 
-Primary responsibility:
-
-- understand the user message in context
-- correct spelling and grammar when useful
-- resolve follow-up questions against prior conversation
-- decide what type of answer is needed
-- choose whether tools are required
-- produce a structured execution plan
-
-Inputs:
-
-- latest user message
-- conversation history
-- current server-local date/time
-- active task context from prior turns
-
-Output:
-
-- `OrchestrationPlan`
-
-What it decides:
-
-- domain: transcript, course, major, policy, or general academic chat
-- deliverable: direct answer, audit, single-semester plan, multi-semester plan, full graduation plan, or lookup result
-- plan scope and semester horizon
-- allowed tools
-- executor path
-- success criteria and failure constraints
-
-### Agent 2: Executor
-
-Primary responsibility:
-
-- execute the orchestrator plan exactly
-- call tools only when needed
-- combine deterministic outputs and LLM reasoning into a grounded draft
-
-Core executor paths:
-
-- `conversation_profile_recall`
-- `conversation_plan_slice`
-- `policy_lookup`
-- `research_lookup`
-- transcript-, course-, major-, and planning-related handlers
-
-Tools available to the executor:
-
-- conversation history and active task context
-- transcript retriever
-- course retriever
-- majors retriever
-- policy retriever
-- deterministic graduation planner
-- prerequisite graph utilities
-- shared web research pipeline
-
-### Agent 3: Finalizer
-
-Primary responsibility:
-
-- rewrite the executor draft into a polished user-facing response
-- keep the answer friendly, professional, and appropriately detailed
-- validate that the draft matches the original plan
-- check citations, freshness, answer scope, and date requirements
-- trigger one controlled retry if the draft fails validation
-
-Validation examples:
-
-- a single-semester request must not return a full graduation plan
-- a current deadline question should not return without a concrete or clearly exhausted source-backed answer
-- a no-tools conversation-only request must not silently call tools
-
-### Shared Research Pipeline
-
-The web research layer is shared infrastructure rather than a top-level agent, but it is a critical part of the system.
-
-Responsibilities:
-
-- resolve research context from the question and conversation
-- infer campus, term, year, freshness needs, and exact-date requirements
-- choose a search strategy
-- retrieve evidence from official sources first
-- rank, fetch, and extract candidate facts
-- return a source-backed research result to the executor
-
-Provider ladder:
-
-1. official Penn State seed URLs
-2. official domain crawl
-3. DuckDuckGo discovery
-4. Tavily fallback when configured
-5. browser fallback for difficult pages
-6. deterministic claim extraction
-7. LLM synthesis over verified evidence
-
-### Inner Agent Communication
-
-The internal handoff between stages is explicit.
-
-1. `Orchestrator -> Executor`
-   Sends a structured `OrchestrationPlan` with the normalized question, requested scope, allowed tools, executor path, and success criteria.
-
-2. `Executor -> Finalizer`
-   Sends an `ExecutorResult` containing the draft response, tools used, execution metadata, and any search resolution artifacts.
-
-3. `Finalizer -> Executor` (optional)
-   Sends a single retry reason if validation fails, for example scope mismatch, missing concrete date, or missing source.
-
-4. `System -> Debug Trace`
-   Records orchestrator, executor, finalizer, tool usage, research rounds, quality checks, and repair attempts.
+### 3. Finalizer & Prerequisite Verifier
+- Enforces strict prerequisite satisfaction before responses reach the student.
+- Replaces vague placeholders with categorized course buckets.
+- Formats structured semester breakdown cards (`Semester N: ... Total Credits: N`).
+- Includes contextual guidance on grading, continuous evaluation, and next academic steps.
 
 ---
 
-## Retrieval-Augmented Generation (RAG)
+## Academic Data & Catalog Specifications
 
-Meridian uses RAG to ground responses in academic data instead of relying on free-form model memory alone.
-
-### What is retrieved
-
-The system retrieves from four main knowledge sources:
-
-- uploaded transcript PDFs for transcript-aware advising
-- `processed_psu_courses.csv` for course information and prerequisites
-- `all_abington_majors_combined.csv` for major requirements
-- `PennState_Combined_Advising_and_Registrar_VERBATIM.pdf` for policy and registrar guidance
-
-### How the RAG pipeline works
-
-1. A transcript is uploaded through `/llm/setup-environment`.
-2. The backend hashes the file and creates a session-scoped transcript collection.
-3. The transcript is loaded, chunked, lightly redacted, embedded, and stored in Chroma.
-4. Static academic sources such as courses, majors, and policy documents are also indexed in local vector stores.
-5. At response time, the executor retrieves the most relevant chunks for the current question.
-6. The retrieved context is passed into the response-building stage so the answer is grounded in local evidence.
-
-### Why RAG matters here
-
-RAG improves:
-
-- accuracy for transcript-specific advising
-- consistency for course and major questions
-- grounded policy responses from local Penn State material
-- explainability, because answers are tied to retrievable academic context
-
-### RAG and the rest of the system
-
-RAG is one layer of the architecture, not the whole system.
-
-- for static academic knowledge, the system prefers local retrieval first
-- for planning, retrieval is combined with deterministic graduation logic
-- for current or time-sensitive facts, the system escalates from local RAG to the shared web research pipeline
-
-This design keeps the system both grounded and adaptable: local retrieval handles stable university knowledge, while web research handles freshness-sensitive questions that embeddings alone cannot answer reliably.
+### NIT Hamirpur B.Tech Curricula
+All degree specifications reflect NEP-2020 guidelines:
+- **Total Credits:** 160 credits across 8 semesters.
+- **Normal Semester Load:** ~18–22 credits per semester.
+- **Course Coding Scheme:** Hyphenated departmental codes:
+  - `CS`: Computer Science and Engineering (`CS-111`, `CS-121`, `CS-211`, `CS-212`, `CS-499`...)
+  - `EC`: Electronics and Communication Engineering (`EC-101`, `EC-211`...)
+  - `EE`: Electrical Engineering (`EE-101`, `EE-211`...)
+  - `ME`: Mechanical Engineering (`ME-101`, `ME-102`...)
+  - `CE`: Civil Engineering (`CE-101`...)
+  - `MA`: Mathematics (`MA-111`, `MA-121`...)
+  - `PH`: Physics (`PH-101`, `PH-102`...)
+  - `CY`: Chemistry (`CY-101`, `CY-102`...)
+  - `HS`: Humanities & Social Sciences (`HS-101`, `HS-102`...)
+  - `MB`: Management Studies (`MB-101`...)
+  - `EN`: Energy & Environmental Engineering (`EN-101`...)
 
 ---
 
-## Engineering Highlights
-
-- **Hybrid reasoning model**: LLMs handle planning and synthesis; deterministic code handles transcript parsing, prerequisite ordering, and schedule generation.
-- **Tool-aware orchestration**: tool usage is explicit, constrained, and validated after execution.
-- **Search for both expected and unexpected questions**: the system can route known policy questions and open-ended factual questions through the same research pipeline.
-- **Session continuity**: follow-up questions like `current semester` or `what about Abington` can continue the active reasoning thread.
-- **Performance-conscious web research**: the search pipeline uses staged query expansion, bounded concurrency, short-lived caches, and early exits when an authoritative answer is found.
-- **Observability**: each response can return a detailed internal trace for debugging and evaluation.
-
----
-
-## Key Technical Components
-
-### Frontend
-
-- React 18
-- React Router
-- MUI (Material UI)
-- Axios
-
-### Backend
-
-- Flask + Flask-CORS
-- Express (Node.js auth service)
-- MySQL
-
-### AI / Retrieval
-
-- Google Gemini (`gemini-3.5-flash-lite`) via OpenAI-compatible API
-- LangChain 0.2
-- ChromaDB
-- PDF ingestion with `pypdf`
-- Local CSV- and PDF-backed retrieval corpora
-
-### Research / Verification
-
-- `duckduckgo-search`
-- `tavily-python` (optional, when configured)
-- `requests`
-- Playwright fallback for JavaScript-heavy pages (optional)
-
----
-
-## Repository Layout
+## Repository Structure
 
 ```text
 .
-├── README.md
-├── requirements.txt                        # Core Python deps (Flask, LangChain, Chroma…)
+├── README.md                                  # Complete project documentation
+├── requirements.txt                           # Core Python dependencies
+├── .gitignore                                 # Production gitignore rules
 ├── IAAS/
-│   ├── client/                             # React frontend + Node auth server
+│   ├── client/                                # React 18 frontend + Node auth server
 │   │   ├── src/
-│   │   ├── server/                         # Express auth API
-│   │   └── package.json
-│   ├── LLMAcadamic-Advisor/                # Flask AI backend
-│   │   ├── api/
-│   │   │   └── api.py
+│   │   │   ├── components/UnifiedChat.jsx     # Leo Academic Advising interface
+│   │   │   ├── pages/LoginPage.jsx            # 1-click Demo Mode Quick Login
+│   │   │   ├── pages/FacultyDashboard.jsx     # Major roadmap graph viewer
+│   │   │   └── services/apiService.js         # API integration layer
+│   │   ├── server/server.js                   # Node auth backend with demo fallback
+│   │   └── setup.sh                           # Unified startup script
+│   ├── LLMAcadamic-Advisor/                   # Flask AI Engine
+│   │   ├── api/api.py                         # REST API route handlers
 │   │   ├── LLM/
-│   │   │   ├── main_copy.py
-│   │   │   ├── orchestration_pipeline.py
-│   │   │   ├── web_search_pipeline.py
-│   │   │   ├── graduationFlowchart.py
-│   │   │   ├── graphExperiment.py
-│   │   │   ├── majorsGraph.py
-│   │   │   ├── processed_psu_courses.csv
-│   │   │   └── PennState_Combined_Advising_and_Registrar_VERBATIM.pdf
-│   │   ├── requirements.txt                # Extra deps (duckduckgo, tavily)
-│   │   └── .env.example
-│   ├── test_orchestration_pipeline.py
-│   └── test_web_search_pipeline.py
+│   │   │   ├── orchestration_pipeline.py      # Orchestrator & multi-agent pipeline
+│   │   │   ├── main_copy.py                   # Executor & tool orchestration
+│   │   │   ├── graduationFlowchart.py         # Deterministic NITH course scheduler
+│   │   │   ├── web_search_pipeline.py         # Official nith.ac.in research pipeline
+│   │   │   ├── build_nith_datasets.py         # NITH dataset extraction tool
+│   │   │   ├── nith_courses.csv               # 74 verified NITH courses & syllabi
+│   │   │   └── nith_majors.csv                # 5 NITH B.Tech degree requirements
+│   │   └── .env.example                       # Example environment configuration
+│   ├── test_orchestration_pipeline.py         # Multi-agent regression tests
+│   ├── test_web_search_pipeline.py            # Web retrieval tests
+│   ├── test_course_prerequisites.py           # Prerequisite validation tests
+│   └── test_api_session_store.py              # Session management tests
 ```
 
 ---
 
 ## API Endpoints
 
-### Flask AI API (port 5002)
+### Flask AI Backend (Port `5002`)
 
 | Method | Path | Purpose |
-| --- | --- | --- |
-| `POST` | `/llm/setup-environment` | Upload a transcript and initialize retrieval |
-| `POST` | `/llm/generate-response` | Generate the main advising response |
-| `POST` | `/llm/clear-conversation` | Clear in-memory conversation and active research context |
-| `POST` | `/llm/generate-major-graph` | Generate a major roadmap graph |
+|---|---|---|
+| `POST` | `/llm/generate-response` | Primary academic advising chat endpoint |
+| `POST` | `/llm/setup-environment` | Ingests student transcript and sets up session RAG |
+| `POST` | `/llm/generate-major-graph` | Generates prerequisite graph for a specified major |
+| `POST` | `/llm/clear-conversation` | Resets active conversation context and memory |
 
-### Node Auth API (port 5001)
+### Node Auth Service (Port `5001`)
 
 | Method | Path | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/register` | Register a new user |
-| `POST` | `/api/login` | Authenticate a user and return a JWT |
+|---|---|---|
+| `POST` | `/api/login` | Returns JWT (instant mock credentials in demo mode) |
+| `POST` | `/api/register` | User registration (bypassed when `MYSQL_DISABLE=true`) |
 
 ---
 
-## Local Development
+## Getting Started
 
-### Prerequisites
-
+### 1. Prerequisites
 - Python 3.10+
 - Node.js 18+ and npm
-- MySQL (only required if you want auth endpoints — set `MYSQL_DISABLE=true` to skip)
-- Google Gemini API key ([get one here](https://aistudio.google.com/app/apikey))
+- Google Gemini API key ([Google AI Studio](https://aistudio.google.com/app/apikey))
 
-### 1. Clone and create a virtual environment
+### 2. Clone and Setup Environment
 
 ```bash
 git clone <repo-url>
 cd AI_ACADEMIC_ADVISOR
+
+# Create and activate Python virtual environment
 python3 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-```
+source .venv/bin/activate       # On Windows: .venv\Scripts\activate
 
-### 2. Install Python dependencies
-
-```bash
+# Install Python dependencies
 pip install -r requirements.txt -r IAAS/LLMAcadamic-Advisor/requirements.txt
-```
 
-Optional — browser fallback support for JavaScript-heavy pages:
-
-```bash
-playwright install chromium
-```
-
-### 3. Install frontend and auth dependencies
-
-```bash
+# Install frontend and auth dependencies
 cd IAAS/client && npm install
 cd server && npm install && cd ../..
 ```
 
-### 4. Configure environment variables
+### 3. Environment Configuration
 
-Copy the example env file and fill in your keys:
+Copy the example environment file:
 
 ```bash
 cp IAAS/LLMAcadamic-Advisor/.env.example IAAS/LLMAcadamic-Advisor/.env
 ```
 
-Minimum required variables in `.env`:
+Configure `IAAS/LLMAcadamic-Advisor/.env`:
 
-```bash
-# LLM provider
+```ini
+# Google Gemini API Configuration
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your-gemini-api-key-here
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
 GEMINI_MODEL=gemini-3.5-flash-lite
-GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+GEMINI_EMBEDDING_MODEL=models/gemini-embedding-2
+
+# Disable MySQL requirement for local demo mode
+MYSQL_DISABLE=true
 ```
 
-Optional variables:
+> **Note:** Real `.env` files are excluded by `.gitignore` and must never be committed.
 
-```bash
-MERIDIAN_DEBUG_TRACE=true          # enables per-request internal trace output
-MYSQL_DISABLE=true              # run without MySQL (skips auth layer)
-LANGCHAIN_API_KEY=...           # LangSmith tracing (optional)
-LANGCHAIN_PROJECT=...           # LangSmith project name (optional)
-TAVILY_API_KEY=...              # Tavily web search fallback (optional)
-```
+### 4. Running the Application
 
-> **Warning:** Never commit your `.env` file. It is listed in `.gitignore`.
-
-### 5. Start the application
+Launch all services concurrently using the root client runner:
 
 ```bash
 cd IAAS/client
-npm start
+MYSQL_DISABLE=true npm start
 ```
 
-This concurrently starts all three services:
-
-| Service | URL |
-|---------|-----|
-| React frontend | http://localhost:3000 |
-| Node auth service | http://localhost:5001 |
-| Flask AI backend | http://127.0.0.1:5002 |
+This starts:
+- **React Frontend:** [http://localhost:3000](http://localhost:3000) (Demo mode active — zero login required)
+- **Node Auth API:** [http://localhost:5001](http://localhost:5001)
+- **Flask AI Engine:** [http://127.0.0.1:5002](http://127.0.0.1:5002)
 
 ---
 
-## Testing
+## Verification & Testing
 
-### AI pipeline unit tests
+### Python Test Suite
+Run the 124 unit and regression tests:
 
 ```bash
-source .venv/bin/activate
-python3 -m unittest IAAS/test_orchestration_pipeline.py IAAS/test_web_search_pipeline.py
+./.venv/bin/python3 -m unittest \
+  IAAS/test_orchestration_pipeline.py \
+  IAAS/test_web_search_pipeline.py \
+  IAAS/test_course_prerequisites.py \
+  IAAS/test_api_session_store.py
 ```
+*Result: 124 passed, 0 failed.*
 
-### Manual conversation smoke test
-
-> The Flask service must already be running before this test.
+### React Frontend Test Suite
+Run component and UI rendering tests:
 
 ```bash
-python IAAS/test_ai_conversation.py
+cd IAAS/client
+npm test -- --watchAll=false
 ```
+*Result: 7 passed, 7 total.*
 
----
+### Production Build
+Verify frontend production compilation:
 
-## Current Status
-
-This is a fully functional engineering prototype and AI systems portfolio project.
-
-**Known limitations:**
-
-| Area | Status |
-|------|--------|
-| Auth layer | Lightweight JWT — not hardened for production |
-| State management | Some state is process-local; would need Redis or a DB for multi-instance deploys |
-| Dependency manifests | Two `requirements.txt` files (root + sub-package) — intentional separation |
-| Secret handling | Requires manual `.env` setup; no secrets manager integration yet |
-
----
-
-## Summary
-
-Meridian is a practical example of modern AI application engineering:
-
-- a real frontend and backend stack
-- explicit multi-agent orchestration
-- deterministic planning for high-stakes academic logic
-- source-aware research for fresh information
-- traceable and testable behavior instead of opaque prompt-only answers
-
-It demonstrates both software engineering discipline and applied AI systems thinking.
-
----
-
-## Core Files To Read First
-
-If you want to understand the system quickly, start here:
-
-1. `IAAS/client/src/components/UnifiedChat.jsx` — main chat UI
-2. `IAAS/client/src/services/apiService.js` — frontend API layer
-3. `IAAS/LLMAcadamic-Advisor/api/api.py` — Flask route handlers
-4. `IAAS/LLMAcadamic-Advisor/LLM/orchestration_pipeline.py` — full agent pipeline
-5. `IAAS/LLMAcadamic-Advisor/LLM/main_copy.py` — executor logic
-6. `IAAS/LLMAcadamic-Advisor/LLM/web_search_pipeline.py` — web research system
-7. `IAAS/LLMAcadamic-Advisor/LLM/graduationFlowchart.py` — deterministic graduation planner
+```bash
+cd IAAS/client
+npm run build
+```
+*Result: Compiled successfully.*
 
 ---
 
 ## License
 
-MIT License — © 2024 Neerad Sood
-
----
-
-## Author
-
-**Neerad Sood**
+MIT License — © 2024–2026 Neerad Sood

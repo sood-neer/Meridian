@@ -32,6 +32,19 @@ except Exception:  # pragma: no cover - fallback for reduced test environments
 CURRENT_DATETIME_FORMAT = "Current local date/time: %A, %B %d, %Y at %I:%M %p."
 
 OFFICIAL_SOURCE_SEEDS: Dict[str, List[str]] = {
+    "nit_hamirpur_policy": [
+        "https://nith.ac.in/",
+        "https://nith.ac.in/bachelor-course-structure-syllabus",
+        "https://nith.ac.in/academic-calendar",
+        "https://nith.ac.in/ordinance-regulations",
+        "https://nith.ac.in/computer-science-engineering",
+    ],
+    "nit_hamirpur_identity": [
+        "https://nith.ac.in/",
+        "https://nith.ac.in/administration",
+        "https://nith.ac.in/deans",
+        "https://nith.ac.in/directors-desk",
+    ],
     "penn_state_policy": [
         "https://www.registrar.psu.edu/academic-calendars/",
         "https://www.registrar.psu.edu/registration/dropadd.cfm",
@@ -51,6 +64,11 @@ OFFICIAL_SOURCE_SEEDS: Dict[str, List[str]] = {
 }
 
 SOURCE_POLICY_MATRIX: Dict[str, Dict[str, Any]] = {
+    "nith_policy": {
+        "required_domain_mode": "strict",
+        "preferred_domains": ["nith.ac.in"],
+        "min_citations": 1,
+    },
     "psu_policy": {
         "required_domain_mode": "strict",
         "preferred_domains": ["abington.psu.edu", "psu.edu", "pennstate.edu"],
@@ -304,6 +322,8 @@ def _detect_campus(text: str) -> Optional[str]:
         return "Penn State Abington"
     if "penn state" in lowered or "psu" in lowered:
         return "Penn State"
+    if "nit hamirpur" in lowered or "nith" in lowered or "hamirpur" in lowered:
+        return "NIT Hamirpur"
     return None
 
 
@@ -344,9 +364,11 @@ def _extract_domain_hints(question: str, campus: Optional[str] = None) -> List[s
     hints: List[str] = []
     lowered = (question or "").lower()
     campus_lower = (campus or "").lower()
+    if any(token in lowered for token in ["nit hamirpur", "nith", "hamirpur"]) or "hamirpur" in campus_lower:
+        hints.append("nith.ac.in")
     if "abington" in lowered or "abington" in campus_lower:
         hints.append("abington.psu.edu")
-    if any(token in lowered for token in ["penn state", "psu", "abington"]) or "penn state" in campus_lower:
+    if any(token in lowered for token in ["penn state", "psu"]) or "penn state" in campus_lower:
         hints.extend(["psu.edu", "pennstate.edu"])
     return list(dict.fromkeys(hints))
 
@@ -434,6 +456,8 @@ def _keywordized_query(question: str) -> str:
 
 
 def _preferred_policy_key(context: SearchContext) -> str:
+    if any(domain.endswith("nith.ac.in") for domain in context.domain_hints):
+        return "nith_policy"
     if any(domain.endswith(("psu.edu", "pennstate.edu")) for domain in context.domain_hints):
         return "psu_policy"
     if context.active_task_kind == "identity_current_role":
@@ -444,16 +468,17 @@ def _preferred_policy_key(context: SearchContext) -> str:
 
 
 def _build_deadline_queries(context: SearchContext) -> List[str]:
-    campus = context.campus or "Penn State"
+    campus = context.campus or "NIT Hamirpur"
     term = (context.term or "current").title()
     year = str(context.year or datetime.now().year)
     question = context.corrected_question
     queries = [
+        f"site:nith.ac.in {campus} academic calendar",
+        f"site:nith.ac.in bachelor course structure syllabus",
+        f"site:nith.ac.in {campus} registration deadline",
+        f"{campus} {term} {year} academic calendar",
         f"{campus} {term} {year} late drop deadline",
-        f"{campus} {term} {year} early drop deadline",
-        f"{campus} {term} {year} drop add deadline",
         f"site:psu.edu {campus} {term} {year} academic calendar late drop",
-        f"site:pennstate.edu {campus} {term} {year} academic calendar early drop",
         question,
     ]
     return list(dict.fromkeys(" ".join(q.split()).strip() for q in queries if q.strip()))
@@ -1023,7 +1048,12 @@ def _fetch_and_build_evidence(
 
 def _run_official_seed_fetch(context: SearchContext, plan: SearchPlan) -> List[SearchEvidence]:
     seeds: List[str] = []
-    if any(domain.endswith(("psu.edu", "pennstate.edu")) for domain in plan.preferred_domains):
+    if any(domain.endswith("nith.ac.in") for domain in plan.preferred_domains):
+        if plan.strategy == "identity_current_role":
+            seeds.extend(OFFICIAL_SOURCE_SEEDS["nit_hamirpur_identity"])
+        else:
+            seeds.extend(OFFICIAL_SOURCE_SEEDS["nit_hamirpur_policy"])
+    elif any(domain.endswith(("psu.edu", "pennstate.edu")) for domain in plan.preferred_domains):
         if plan.strategy == "identity_current_role":
             seeds.extend(OFFICIAL_SOURCE_SEEDS["penn_state_identity"])
         else:

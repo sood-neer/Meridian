@@ -22,7 +22,7 @@ const FEATURE_CARDS = [
     {
         icon: <MenuBookRoundedIcon fontSize="small" />,
         title: 'Course lookups',
-        blurb: 'Credits, prerequisites, and descriptions from the live Penn State catalog.',
+        blurb: 'Credits, prerequisites, and descriptions from the academic catalog.',
     },
     {
         icon: <SchoolRoundedIcon fontSize="small" />,
@@ -39,6 +39,33 @@ const FEATURE_CARDS = [
         title: 'Smart recommendations',
         blurb: 'Next-best courses tuned to your transcript and interests.',
     },
+];
+
+const SUGGESTED_PROMPTS = [
+    {
+        label: '🎓 NIT Hamirpur B.Tech CSE',
+        prompt: 'I am a B.Tech CSE student at NIT Hamirpur with a 7.8 CGPA. What courses should I take in my upcoming semester and how do I plan my departmental electives?'
+    },
+    {
+        label: '📚 Backlogs & Supplementary Exams',
+        prompt: 'I have a backlog from last semester at NIT Hamirpur. What is the policy for clearing it via supplementary exams or special terms?'
+    },
+    {
+        label: '💼 T&P Placement Eligibility',
+        prompt: 'What are the minimum CGPA and academic eligibility criteria for campus placement drives (T&P / CCD) at NIT Hamirpur?'
+    },
+    {
+        label: '📅 Semester Registration & Credits',
+        prompt: 'How many minimum and maximum credits can an NIT Hamirpur student register for in a semester, and how does the grading scale work?'
+    },
+    {
+        label: 'Prerequisites for CMPSC 131',
+        prompt: 'What are the prerequisites for CMPSC 131?'
+    },
+    {
+        label: 'Course Repeat Policy',
+        prompt: 'What is the course repeat and late drop policy?'
+    }
 ];
 
 const UnifiedChat = () => {
@@ -142,6 +169,13 @@ const UnifiedChat = () => {
         }
     };
 
+    const handlePromptClick = (text) => {
+        setInput(text);
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+        }
+    };
+
     const handleSendMessage = async () => {
         if (!input.trim() || isLoading) return;
 
@@ -240,7 +274,7 @@ const UnifiedChat = () => {
                     </span>
                     <div className="iaas-brand-text">
                         <span className="iaas-brand-title">Leo</span>
-                        <span className="iaas-brand-sub">Penn State Abington · AI powered</span>
+                        <span className="iaas-brand-sub">NIT Hamirpur · AI Academic Advisor</span>
                     </div>
                 </div>
 
@@ -312,6 +346,22 @@ const UnifiedChat = () => {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="iaas-suggestions">
+                            <span className="iaas-suggestions-title">Quick Starter Prompts</span>
+                            <div className="iaas-suggestion-chips">
+                                {SUGGESTED_PROMPTS.map((item) => (
+                                    <button
+                                        key={item.label}
+                                        type="button"
+                                        className="iaas-suggestion-chip"
+                                        onClick={() => handlePromptClick(item.prompt)}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </section>
                 )}

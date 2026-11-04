@@ -38,6 +38,8 @@ class MajorGraph:
         here = os.path.dirname(os.path.abspath(__file__))
         files_for_version = [
             self._csv_path,
+            os.path.join(here, "nith_courses.csv"),
+            os.path.join(here, "nith_majors.csv"),
             os.path.join(here, "processed_psu_courses.csv"),
             os.path.join(here, "graduationFlowchart.py"),
             os.path.join(here, "majorsGraph.py"),
@@ -190,17 +192,29 @@ class MajorGraph:
 
     def _build_freshman_plan(self, actual_major_name: str, option_name: str = "General Option") -> dict:
         csv_dir = os.path.dirname(__file__)
-        courses_csv = os.path.join(csv_dir, "processed_psu_courses.csv")
-        majors_csv = os.path.join(csv_dir, "all_abington_majors_combined(5).csv")
+        courses_csv = os.path.join(csv_dir, "nith_courses.csv")
+        majors_csv = os.path.join(csv_dir, "nith_majors.csv")
         if not os.path.exists(courses_csv):
-            courses_csv = os.path.join(csv_dir, "..", "LLM", "processed_psu_courses.csv")
+            courses_csv = os.path.join(csv_dir, "..", "LLM", "nith_courses.csv")
+        if not os.path.exists(courses_csv):
+            courses_csv = os.path.join(csv_dir, "processed_psu_courses.csv")
+            if not os.path.exists(courses_csv):
+                courses_csv = os.path.join(csv_dir, "..", "LLM", "processed_psu_courses.csv")
+
         if not os.path.exists(majors_csv):
-            majors_csv = os.path.join(csv_dir, "..", "LLM", "all_abington_majors_combined(5).csv")
+            majors_csv = os.path.join(csv_dir, "..", "LLM", "nith_majors.csv")
+        if not os.path.exists(majors_csv):
+            majors_csv = os.path.join(csv_dir, "all_abington_majors_combined(5).csv")
+            if not os.path.exists(majors_csv):
+                majors_csv = os.path.join(csv_dir, "..", "LLM", "all_abington_majors_combined(5).csv")
 
         # Mirror the no-transcript freshman planning logic used by chat.
-        # Use a softer min/max so the scheduler has breathing room when prereqs
-        # legitimately constrain what fits in a semester (prevents impossible placements
-        # that used to happen when min==max forced prereq bypasses).
+        # Use appropriate credits for NIT Hamirpur (160) vs others (120)
+        is_nith = "NIT Hamirpur" in actual_major_name or "B.Tech" in actual_major_name
+        credits_needed = 160 if is_nith else 120
+        max_cr = 20 if is_nith else 16
+        min_cr = 16 if is_nith else 12
+
         return generate_semester_plan(
             major_name=actual_major_name,
             completed_courses=[],
@@ -208,10 +222,10 @@ class MajorGraph:
             courses_csv_path=courses_csv,
             majors_csv_path=majors_csv,
             option_name=option_name,
-            credits_needed=120,
+            credits_needed=credits_needed,
             max_semesters=8,
-            max_credits_per_sem=16,
-            min_credits_per_sem=12,
+            max_credits_per_sem=max_cr,
+            min_credits_per_sem=min_cr,
         )
 
     def _draw_plan_graph(

@@ -34,11 +34,20 @@ const Profile = ({ onLogout = () => {} }) => {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setName(user.name);
-      setUserType(user.role);
-      setSex(user.sex);
-      setDateOfBirth(user.dateOfBirth);
+      try {
+        const user = JSON.parse(storedUser);
+        setName(user.name || 'NIT Hamirpur Student');
+        setUserType(user.role || 'Student');
+        setSex(user.sex || 'Male');
+        setDateOfBirth(user.dateOfBirth || '2003-01-01');
+      } catch (_) {
+        setName('NIT Hamirpur Student');
+      }
+    } else {
+      setName('NIT Hamirpur Student');
+      setUserType('Student');
+      setSex('Male');
+      setDateOfBirth('2003-01-01');
     }
   }, []);
 

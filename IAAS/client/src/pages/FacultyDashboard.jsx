@@ -61,7 +61,7 @@ const FacultyDashboard = () => {
             id="major-name"
             value={majorName}
             onChange={handleMajorNameChange}
-            placeholder="e.g., Computer Science, B.S. (Abington)"
+            placeholder="e.g., Computer Science and Engineering, B.Tech."
           />
           <button onClick={handleSubmit} disabled={loading}>
             {loading ? "Generating..." : "Generate Graph"}

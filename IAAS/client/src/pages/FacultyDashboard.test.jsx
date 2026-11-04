@@ -25,7 +25,7 @@ describe('FacultyDashboard', () => {
         render(<FacultyDashboard />);
 
         fireEvent.change(screen.getByLabelText(/Enter Major Name/i), {
-            target: { value: 'Computer Science, B.S. (Abington)' },
+            target: { value: 'Computer Science and Engineering, B.Tech.' },
         });
         fireEvent.click(screen.getByRole('button', { name: /Generate Graph/i }));
 
@@ -35,7 +35,7 @@ describe('FacultyDashboard', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ major_name: 'Computer Science, B.S. (Abington)' }),
+                body: JSON.stringify({ major_name: 'Computer Science and Engineering, B.Tech.' }),
             });
         });
         expect(await screen.findByText(/Graph generated successfully/i)).toBeInTheDocument();

@@ -26,7 +26,7 @@ import pandas as pd
 import networkx as nx
 
 
-COURSE_TOKEN_RE = re.compile(r"\b([A-Z]{2,8}(?:/[A-Z]{2,8})*)\s*(\d{1,3}[A-Z]?)\b")
+COURSE_TOKEN_RE = re.compile(r"\b([A-Z]{2,8}(?:/[A-Z]{2,8})*)[-\s]+(\d{1,3}[A-Z]?)\b")
 GENED_CREDITS_RE = re.compile(r"([A-Za-z \-\(\)]+):\s*(\d+)\s*credits", re.IGNORECASE)
 
 GENED_CATEGORY_LABELS = {
@@ -123,7 +123,13 @@ def _min_sem_by_level(course: str) -> int:
 
 
 def _normalize_course_code(code: str) -> str:
-    return re.sub(r"\s+", " ", code.strip().upper())
+    """Normalize a course code: strip, uppercase, collapse whitespace.
+    Preserves both NITH hyphenated style (CS-111) and PSU space style (CMPSC 131).
+    Converts 'MA111' -> 'MA-111' for NITH-style short dept codes."""
+    code = re.sub(r"\s+", " ", code.strip().upper())
+    # Rehydrate NITH codes that lost their hyphen: 'MA111' -> 'MA-111'
+    code = re.sub(r"^([A-Z]{2,4})(\d{3})$", r"\1-\2", code)
+    return code
 
 
 def _parse_credits(value, default: int = 0) -> int:
@@ -1360,8 +1366,15 @@ class GraduationFlowchart:
 
 # --- Helper functions restored ---
 def _normalize_course_token(dept_part: str, num_part: str) -> str:
-    dept = dept_part.split("/")[0].strip()
-    return f"{dept} {num_part.strip()}"
+    """Produce canonical course code.
+    NITH-style: short dept (2-4 chars) → 'CS-111'
+    PSU-style:  long dept (5+ chars)   → 'CMPSC 131'
+    """
+    dept = dept_part.split("/")[0].strip().upper()
+    num = num_part.strip().upper()
+    if len(dept) <= 4:
+        return f"{dept}-{num}"
+    return f"{dept} {num}"
 
 
 def extract_all_courses(expr: str) -> List[str]:
@@ -1471,11 +1484,18 @@ def generate_semester_plan(
     ]
 
     # Determine dominant department for option placeholders
-    prescribed_depts = {c.split()[0] for c in prescribed_courses if c.split()}
+    # Handle both hyphenated (CS-111 → "CS") and space (CMPSC 131 → "CMPSC")
+    prescribed_depts = set()
+    for c in prescribed_courses:
+        parts = re.split(r"[-\s]+", c.strip())
+        if parts:
+            prescribed_depts.add(parts[0].upper())
     if "CMPSC" in prescribed_depts:
         dominant_dept = "CMPSC"
     elif "DS" in prescribed_depts:
         dominant_dept = "DS"
+    elif "CS" in prescribed_depts:
+        dominant_dept = "CS"
     else:
         dominant_dept = flowchart._dominant_dept(prescribed_courses) or "OPT"
 

@@ -819,7 +819,7 @@ class PersonalityRegressionTests(unittest.TestCase):
         self.assertGreater(len(ADVISOR_PERSONA), 200, "persona must be substantive")
 
         lowered = ADVISOR_PERSONA.lower()
-        self.assertIn("penn state abington", lowered, "persona must name the school")
+        self.assertIn("nit hamirpur", lowered, "persona must name the school")
         self.assertIn("encourag", lowered, "persona must mention encouragement")
         self.assertIn("things to consider next", lowered, "persona must define enrichment section")
         self.assertIn("soft-ask", lowered, "persona must define soft-ask behavior")

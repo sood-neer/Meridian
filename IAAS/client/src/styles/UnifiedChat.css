@@ -275,6 +275,50 @@
     line-height: 1.5;
 }
 
+.iaas-suggestions {
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.iaas-suggestions-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--iaas-muted);
+    font-weight: 600;
+}
+
+.iaas-suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 760px;
+}
+
+.iaas-suggestion-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--iaas-border);
+    color: var(--iaas-text);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.iaas-suggestion-chip:hover {
+    background: rgba(125, 211, 252, 0.12);
+    border-color: rgba(125, 211, 252, 0.35);
+    color: var(--iaas-accent);
+    transform: translateY(-1px);
+}
+
 /* ===== Messages =========================================================== */
 
 .iaas-messages {
