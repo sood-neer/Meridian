@@ -678,15 +678,128 @@ nith_courses = [
 ]
 
 # Write nith_courses.csv
+raw_courses_file = os.path.join(os.path.dirname(__file__), "nith_raw_extracted_courses.csv")
+merged_courses = list(nith_courses)
+existing_codes = {c["course_number"] for c in nith_courses}
+
+if os.path.exists(raw_courses_file):
+    import pandas as pd
+    import re
+    df_raw = pd.read_csv(raw_courses_file)
+    valid_raw = df_raw[~(df_raw["course_name"].isna() & df_raw["description"].isna())].copy()
+    valid_raw = valid_raw[valid_raw["course_code"].str.match(r"^[A-Z]{2,4}-\d{3}[A-Z]?$")]
+
+    def clean_credits(name, cr):
+        try:
+            val = float(cr)
+            if val > 0:
+                return val
+        except (ValueError, TypeError):
+            pass
+        lname = str(name).lower()
+        if "lab" in lname or "practice" in lname:
+            return 1.0
+        if "workshop" in lname:
+            return 2.0
+        if "project" in lname:
+            return 6.0
+        if "holistic" in lname or "assessment" in lname:
+            return 2.0
+        return 3.0
+
+    def clean_description(code, name, desc):
+        desc_str = str(desc).strip() if pd.notna(desc) else ""
+        desc_str = re.sub(r"\bPenn Function Method\b", "Penalty Function Method", desc_str, flags=re.IGNORECASE)
+        if len(desc_str) > 20:
+            if "nit hamirpur" not in desc_str.lower() and "nith" not in desc_str.lower():
+                desc_str += " Syllabus source: National Institute of Technology Hamirpur bachelor-course-structure-syllabus."
+            return desc_str
+        lname = str(name).lower()
+        if code == "MS-451":
+            return "Introduction to smart and multifunctional materials: Shape memory alloys (SMA), piezoelectric and electrostrictive ceramics, magnetostrictive materials, electroactive polymers (EAP), magneto-rheological fluids. Actuator and sensor design, MEMS, and aerospace/biomedical applications. NIT Hamirpur Department of Materials Science & Engineering syllabus."
+        if code == "PH-451":
+            return "Semiconductor crystal growth, cleanroom standards, thermal oxidation, photolithography, wet and dry etching, thin film deposition (PVD, CVD, ALD), ion implantation, thermal diffusion, metallization, and device characterization. NIT Hamirpur Department of Physics syllabus."
+        if "holistic" in lname or "assessment" in lname:
+            return f"Comprehensive holistic assessment, technical seminar, and professional development evaluation under departmental faculty at NIT Hamirpur for {name}."
+        if "project" in lname:
+            return f"Undergraduate capstone engineering project, implementation, literature survey, experimental verification, thesis submission, and viva-voce at NIT Hamirpur for {name}."
+        if "lab" in lname or "practice" in lname or "workshop" in lname:
+            return f"Practical laboratory experiments, simulations, and hands-on coursework corresponding to {name}. National Institute of Technology Hamirpur bachelor-course-structure-syllabus."
+        return f"Core and elective curriculum study of {name} at National Institute of Technology Hamirpur. Covers theoretical foundations, analytical methodologies, and practical engineering applications."
+
+    def generate_learning_objectives(course_name, description):
+        desc = str(description)
+        unit_titles = re.findall(r"UNIT[- ]*\d+\s+([^:]+?):", desc, flags=re.IGNORECASE)
+        if unit_titles:
+            objs = []
+            verbs = ["Understand fundamental concepts of", "Analyze and solve problems in", "Design and evaluate techniques for", "Apply theoretical principles of"]
+            for i, title in enumerate(unit_titles[:4]):
+                clean_title = re.sub(r"\s+", " ", title).strip()
+                v = verbs[i % len(verbs)]
+                objs.append(f"{v} {clean_title}")
+            return str(objs)
+        if "lab" in course_name.lower():
+            base_name = re.sub(r"(?i)\s+lab.*", "", course_name).strip()
+            return str([f"Conduct practical experiments and measurements in {base_name}", f"Analyze experimental data and validate theoretical principles for {base_name}"])
+        clean_name = course_name.strip()
+        return str([f"Master foundational principles and concepts of {clean_name}", f"Apply analytical and design methods to engineering problems in {clean_name}"])
+
+    prereq_rules = {
+        "CE-215": "CE-212", "CE-216": "CE-214", "CE-221": "CE-211", "CE-225": "CE-224",
+        "CE-226": "CE-211", "CE-314": "CE-313", "CE-321": "CE-211", "CE-322": "CE-312",
+        "CE-323": "CE-223", "CE-324": "CE-311", "CE-325": "CE-322", "CE-414": "CE-212",
+        "CH-216": "CH-212", "CH-225": "CH-221", "CH-226": "CH-213", "CH-321": "CH-312",
+        "CH-322": "CH-222", "CH-324": "CH-322", "CH-415": "CH-411",
+        "EE-216": "EE-214", "EE-217": "EE-213", "EE-221": "EE-211", "EE-225": "EE-211",
+        "EE-226": "EE-224", "EE-311": "EE-222", "EE-312": "EE-213", "EE-315": "EE-221",
+        "EE-316": "EE-311", "EE-321": "EE-312", "EE-322": "EE-223", "EE-324": "EE-214",
+        "EC-216": "EC-212", "EC-217": "EC-211", "EC-221": "EC-211", "EC-225": "EC-221",
+        "EC-226": "EC-222", "EC-311": "EC-222", "EC-312": "EC-213", "EC-315": "EC-311",
+        "EC-321": "EC-221", "EC-324": "EC-312", "EC-414": "EC-411",
+        "ME-215": "ME-211", "ME-223": "ME-212", "ME-225": "ME-224", "ME-226": "ME-221",
+        "ME-311": "ME-222", "ME-312": "ME-211", "ME-314": "ME-311", "ME-321": "ME-223",
+        "ME-322": "ME-312", "ME-324": "ME-321", "ME-411": "ME-223", "ME-414": "ME-411",
+        "MS-215": "MS-212", "MS-226": "MS-221", "MS-314": "MS-311", "MS-324": "MS-321",
+        "MS-414": "MS-411",
+        "MA-211": "MA-111", "MA-221": "MA-121", "PH-211": "PH-101", "PH-216": "PH-211",
+        "PH-217": "PH-212", "PH-226": "PH-221", "PH-227": "PH-222", "PH-314": "PH-221"
+    }
+
+    for _, r in valid_raw.iterrows():
+        code = r["course_code"].strip()
+        if code in existing_codes:
+            continue
+        existing_codes.add(code)
+        cname = r["course_name"].strip()
+        cr = clean_credits(cname, r["credits"])
+        int_cr = int(cr) if float(cr) == int(cr) else cr
+        cr_label = f"{int_cr} Credit" if int_cr == 1 else f"{int_cr} Credits"
+        formatted_name = f"{cname}\n\n{cr_label}"
+        desc = clean_description(code, cname, r["description"])
+        objs = generate_learning_objectives(cname, desc)
+        prereq = prereq_rules.get(code, "None")
+        prereq_list = f"['{prereq}']" if prereq != "None" else "[]"
+        merged_courses.append({
+            "course_number": code,
+            "course_name": formatted_name,
+            "description": desc,
+            "prerequisite_data": prereq,
+            "prerequisite_course_numbers": prereq_list,
+            "learning_objectives": objs,
+            "department_url": "https://nith.ac.in/bachelor-course-structure-syllabus"
+        })
+
 fieldnames = ["course_number", "course_name", "description", "prerequisite_data", "prerequisite_course_numbers", "learning_objectives", "department_url"]
 with open(courses_file, "w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
-    for row in nith_courses:
+    for row in merged_courses:
         writer.writerow(row)
-print(f"Wrote {len(nith_courses)} courses to {courses_file}")
+print(f"Wrote {len(merged_courses)} courses to {courses_file}")
 
 # Write nith_majors.csv
+common_first_year = "MA-111, PH-101, CS-111, ME-101, HS-101, HS-103, PH-102, HS-102, ME-102, CE-101, MA-121, CY-101, CS-121, EE-101, EC-101, EN-101, MB-101, CY-102, EE-102"
+
 majors_data = [
     {
         "Major Name": "Computer Science and Engineering, B.Tech. (NIT Hamirpur)",
@@ -694,7 +807,7 @@ majors_data = [
         "Total Credits Required": "160",
         "Credits for Major": "120",
         "Credits for General Education": "40",
-        "Prescribed Courses": "MA-111, PH-101, CS-111, ME-101, HS-101, HS-103, PH-102, HS-102, ME-102, CE-101, MA-121, CY-101, CS-121, EE-101, EC-101, EN-101, MB-101, CY-102, EE-102, MA-219, CS-212, CS-213, CS-214, CS-215, EC-219, CS-217, CS-218, CS-219, CS-221, CS-222, CS-223, CS-224, CS-241, CS-225, CS-226, CS-227, CS-311, CS-312, CS-313, CS-314, CS-351, CS-301, CS-315, CS-316, CS-321, CS-322, CS-323, CS-341, CS-361, CS-381, HS-321, CS-324, CS-325, CS-411, CS-412, CS-413, CS-431, CS-452, CS-471, CS-414, CS-415, CS-416, CS-499, CS-461, CS-481, CS-498",
+        "Prescribed Courses": f"{common_first_year}, MA-219, CS-212, CS-213, CS-214, CS-215, EC-219, CS-217, CS-218, CS-219, CS-221, CS-222, CS-223, CS-224, CS-241, CS-225, CS-226, CS-227, CS-311, CS-312, CS-313, CS-314, CS-351, CS-301, CS-315, CS-316, CS-321, CS-322, CS-323, CS-341, CS-361, CS-381, HS-321, CS-324, CS-325, CS-411, CS-412, CS-413, CS-431, CS-452, CS-471, CS-414, CS-415, CS-416, CS-499, CS-461, CS-481, CS-498",
         "Additional Courses": "Open Electives, Minor Degree Courses",
         "Options": "Artificial Intelligence & Data Science, Systems & Cybersecurity, Software Systems",
         "General Option Courses": "CS-241, CS-242, CS-243, CS-351, CS-352, CS-353, CS-341, CS-342, CS-343, CS-361, CS-362, CS-363, CS-431, CS-432, CS-433, CS-461, CS-462, CS-463, CS-464, CS-481, CS-482, CS-483, CS-484",
@@ -707,11 +820,11 @@ majors_data = [
         "Total Credits Required": "160",
         "Credits for Major": "120",
         "Credits for General Education": "40",
-        "Prescribed Courses": "MA-111, PH-101, CS-111, ME-101, HS-101, HS-103, PH-102, HS-102, ME-102, CE-101, MA-121, CY-101, CS-121, EE-101, EC-101, EN-101, MB-101, CY-102, EE-102, EC-219",
+        "Prescribed Courses": f"{common_first_year}, EC-211, EC-212, EC-213, EC-214, EC-215, EC-216, EC-217, EC-218, EC-219, EC-221, EC-222, EC-223, EC-224, EC-225, EC-226, EC-311, EC-312, EC-313, EC-314, EC-315, EC-321, EC-322, EC-323, EC-324, EC-411, EC-412, EC-413, EC-414, EC-498, EC-499",
         "Additional Courses": "EC Discipline Electives, Open Electives",
         "Options": "VLSI Design, Communication Systems, Embedded Systems",
-        "General Option Courses": "EC-219, EC-101, EE-101",
-        "Data Science Option Courses": "CS-121, MA-219",
+        "General Option Courses": "EC-219, EC-101, EE-101, EC-351, EC-352, EC-361, EC-362, EC-451, EC-452",
+        "Data Science Option Courses": "CS-121, MA-219, EC-312, EC-324",
         "General Education Requirements": "Institute Core: 40 credits (Mathematics, Sciences, Humanities)"
     },
     {
@@ -720,11 +833,11 @@ majors_data = [
         "Total Credits Required": "160",
         "Credits for Major": "120",
         "Credits for General Education": "40",
-        "Prescribed Courses": "MA-111, PH-101, CS-111, ME-101, HS-101, HS-103, PH-102, HS-102, ME-102, CE-101, MA-121, CY-101, CS-121, EE-101, EC-101, EN-101, MB-101, CY-102, EE-102",
+        "Prescribed Courses": f"{common_first_year}, EE-211, EE-212, EE-213, EE-214, EE-215, EE-216, EE-217, EE-218, EE-221, EE-222, EE-223, EE-224, EE-225, EE-226, EE-227, EE-311, EE-312, EE-313, EE-314, EE-315, EE-316, EE-321, EE-322, EE-323, EE-324, EE-411, EE-412, EE-498, EE-499",
         "Additional Courses": "EE Discipline Electives, Open Electives",
         "Options": "Power Systems, Control & Automation, Electric Vehicles",
-        "General Option Courses": "EE-101, EE-102",
-        "Data Science Option Courses": "CS-111, MA-111",
+        "General Option Courses": "EE-101, EE-102, EE-351, EE-352, EE-451, EE-452",
+        "Data Science Option Courses": "CS-111, MA-111, EE-313, EE-322",
         "General Education Requirements": "Institute Core: 40 credits"
     },
     {
@@ -733,11 +846,11 @@ majors_data = [
         "Total Credits Required": "160",
         "Credits for Major": "120",
         "Credits for General Education": "40",
-        "Prescribed Courses": "MA-111, PH-101, CS-111, ME-101, HS-101, HS-103, PH-102, HS-102, ME-102, CE-101, MA-121, CY-101, CS-121, EE-101, EC-101, EN-101, MB-101, CY-102, EE-102",
+        "Prescribed Courses": f"{common_first_year}, ME-211, ME-212, ME-213, ME-214, ME-215, ME-216, ME-217, ME-221, ME-222, ME-223, ME-224, ME-225, ME-226, ME-227, ME-311, ME-312, ME-313, ME-314, ME-321, ME-322, ME-323, ME-324, ME-411, ME-412, ME-413, ME-414, ME-498, ME-499",
         "Additional Courses": "ME Discipline Electives, Open Electives",
         "Options": "Thermal Engineering, Design Engineering, Manufacturing",
-        "General Option Courses": "ME-101, ME-102",
-        "Data Science Option Courses": "CS-111, MA-111",
+        "General Option Courses": "ME-101, ME-102, ME-351, ME-352, ME-451, ME-452",
+        "Data Science Option Courses": "CS-111, MA-111, ME-413",
         "General Education Requirements": "Institute Core: 40 credits"
     },
     {
@@ -746,10 +859,36 @@ majors_data = [
         "Total Credits Required": "160",
         "Credits for Major": "120",
         "Credits for General Education": "40",
-        "Prescribed Courses": "MA-111, PH-101, CS-111, ME-101, HS-101, HS-103, PH-102, HS-102, ME-102, CE-101, MA-121, CY-101, CS-121, EE-101, EC-101, EN-101, MB-101, CY-102, EE-102",
+        "Prescribed Courses": f"{common_first_year}, CE-211, CE-212, CE-213, CE-214, CE-215, CE-216, CE-217, CE-221, CE-222, CE-223, CE-224, CE-225, CE-226, CE-227, CE-311, CE-312, CE-313, CE-314, CE-321, CE-322, CE-323, CE-324, CE-325, CE-411, CE-412, CE-413, CE-414, CE-498, CE-499",
         "Additional Courses": "CE Discipline Electives, Open Electives",
         "Options": "Structural Engineering, Geotechnical, Transportation, Environmental",
-        "General Option Courses": "CE-101",
+        "General Option Courses": "CE-101, CE-351, CE-352, CE-451, CE-452",
+        "Data Science Option Courses": "CS-111, MA-111, CE-304",
+        "General Education Requirements": "Institute Core: 40 credits"
+    },
+    {
+        "Major Name": "Chemical Engineering, B.Tech. (NIT Hamirpur)",
+        "Major Code": "NITH_BTECH_CH",
+        "Total Credits Required": "160",
+        "Credits for Major": "120",
+        "Credits for General Education": "40",
+        "Prescribed Courses": f"{common_first_year}, CH-211, CH-212, CH-213, CH-214, CH-215, CH-216, CH-217, CH-218, CH-221, CH-222, CH-223, CH-224, CH-225, CH-226, CH-227, CH-311, CH-312, CH-313, CH-314, CH-315, CH-321, CH-322, CH-323, CH-324, CH-411, CH-412, CH-413, CH-414, CH-415, CH-498, CH-499",
+        "Additional Courses": "CH Discipline Electives, Open Electives",
+        "Options": "Process Systems, Biochemical Engineering, Petroleum & Petrochemicals",
+        "General Option Courses": "CH-351, CH-352, CH-451, CH-452",
+        "Data Science Option Courses": "CS-111, MA-111, CH-214",
+        "General Education Requirements": "Institute Core: 40 credits"
+    },
+    {
+        "Major Name": "Materials Science and Engineering, B.Tech. (NIT Hamirpur)",
+        "Major Code": "NITH_BTECH_MS",
+        "Total Credits Required": "160",
+        "Credits for Major": "120",
+        "Credits for General Education": "40",
+        "Prescribed Courses": f"{common_first_year}, MS-211, MS-212, MS-213, MS-215, MS-216, MS-217, MS-221, MS-222, MS-224, MS-226, MS-227, MS-311, MS-314, MS-321, MS-322, MS-323, MS-324, MS-411, MS-412, MS-413, MS-414, MS-415, MS-498, MS-499",
+        "Additional Courses": "MS Discipline Electives, Open Electives",
+        "Options": "Nanomaterials, Functional Ceramics, Metallurgy & Polymer Science",
+        "General Option Courses": "MS-351, MS-352, MS-451, MS-452",
         "Data Science Option Courses": "CS-111, MA-111",
         "General Education Requirements": "Institute Core: 40 credits"
     }

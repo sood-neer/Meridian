@@ -48,7 +48,7 @@ def _load_short_course_prefixes() -> Tuple[str, ...]:
     catalog this advisor is grounded in.
     """
 
-    prefixes = {"CS", "MA", "PH", "CY", "ME", "EE", "EC", "CE", "HS", "EN", "MB", "PSU", "ENGL", "ESL", "CAS", "ART", "SOC"}
+    prefixes = {"CS", "MA", "PH", "CY", "ME", "EE", "EC", "CE", "CH", "MS", "HS", "EN", "MB", "PSU", "ENGL", "ESL", "CAS", "ART", "SOC"}
     catalog_path = os.path.join(os.path.dirname(__file__), "nith_courses.csv")
     if not os.path.exists(catalog_path):
         catalog_path = os.path.join(os.path.dirname(__file__), "processed_psu_courses.csv")

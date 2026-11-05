@@ -16,8 +16,8 @@
 
 **Meridian** features **Leo**, an AI Academic Advisor tuned for undergraduate engineering students at **NIT Hamirpur**:
 
-- **Curriculum-Grounded Planning:** Built directly on the official NIT Hamirpur Bachelor Course Structure & Syllabus ([nith.ac.in/bachelor-course-structure-syllabus](https://nith.ac.in/bachelor-course-structure-syllabus)).
-- **NEP-2020 Degree Structures:** Supports B.Tech programs (Computer Science & Engineering, Electronics & Communication Engineering, Electrical Engineering, Mechanical Engineering, Civil Engineering) across 8 semesters and 160 total credits (~20 credits/semester).
+- **Curriculum-Grounded Planning:** Grounded in 695 official undergraduate courses indexed directly from the official NIT Hamirpur Bachelor Course Structure & Syllabus ([nith.ac.in/bachelor-course-structure-syllabus](https://nith.ac.in/bachelor-course-structure-syllabus)).
+- **NEP-2020 Degree Structures:** Supports B.Tech programs across all major engineering disciplines (Computer Science & Engineering, Electronics & Communication Engineering, Electrical Engineering, Mechanical Engineering, Civil Engineering, Chemical Engineering, Materials Science & Engineering) across 8 semesters and 160 total credits (~20 credits/semester).
 - **Indian Academic Context:** Built-in awareness of the 10-point CGPA grading scale ($O=10$, $A^+=9$, $A=8$, $B^+=7$, $B=6$, $C=5$, $D=4$, $F=0$), continuous internal evaluations (quizzes, mid-terms, labs), backlog clearance rules, and Training & Placement (T&P) Cell requirements.
 - **Deterministic Prerequisite Graph:** Validates course sequences and hard prerequisites (e.g. `CS-111` $\rightarrow$ `CS-121` $\rightarrow$ `CS-211`) to prevent scheduling invalid courses.
 - **Official Web Research Pipeline:** Prioritizes `site:nith.ac.in` for real-time institute deadlines, academic calendars, ordinances, and administrative leadership lookups.
